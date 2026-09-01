@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: quicknotes_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: quicknotes_db
+      POSTGRES_USER: quicknotes_user
+      POSTGRES_PASSWORD: quicknotes_password_2026
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - quicknotes_pgdata:/var/lib/postgresql
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quicknotes_user -d quicknotes_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: ghcr.io/uri-travoski/quicknotes:latest
+    container_name: quicknotes_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://quicknotes_user:quicknotes_password_2026@postgres:5432/quicknotes_db
+      NODE_ENV: production
+      UPLOAD_DIR: ./uploads
+      MAX_FILE_SIZE_MB: 100
+      DEFAULT_OWNER_USERNAME: ${DEFAULT_OWNER_USERNAME:-owner}
+      DEFAULT_OWNER_PASSWORD: ${DEFAULT_OWNER_PASSWORD:-quicknotes_owner_password_2026}
+      DEFAULT_API_USERNAME: ${DEFAULT_API_USERNAME:-api_user}
+      DEFAULT_API_PASSWORD: ${DEFAULT_API_PASSWORD:-quicknotes_api_password_2026}
+    volumes:
+      - quicknotes_uploads:/app/uploads
+      - quicknotes_backups:/app/backups
+    ports:
+      - "3000:3000"
+
+volumes:
+  quicknotes_pgdata:
+    driver: local
+  quicknotes_uploads:
+    driver: local
+  quicknotes_backups:
+    driver: local

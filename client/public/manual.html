@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickNotes v1.5.7 — Comprehensive User Manual & Technical Reference</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-surface: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --accent-bg: #fef3c7;
+      --code-bg: #1e293b;
+      --code-text: #f8fafc;
+      --sidebar-w: 280px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --bg-surface: #1e1e1e;
+        --bg-card: #242424;
+        --border: #333333;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent: #fbbf24;
+        --accent-hover: #f59e0b;
+        --accent-bg: #451a03;
+        --code-bg: #090d16;
+        --code-text: #f1f5f9;
+      }
+    }
+    body.dark {
+      --bg: #121212;
+      --bg-surface: #1e1e1e;
+      --bg-card: #242424;
+      --border: #333333;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #fbbf24;
+      --accent-hover: #f59e0b;
+      --accent-bg: #451a03;
+      --code-bg: #090d16;
+      --code-text: #f1f5f9;
+    }
+    body.light {
+      --bg: #ffffff;
+      --bg-surface: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --accent-bg: #fef3c7;
+      --code-bg: #1e293b;
+      --code-text: #f8fafc;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    /* Layout */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* Top Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: 60px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      backdrop-filter: blur(8px);
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+    .btn-mobile-nav {
+      display: none;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      padding: 20px 14px;
+      flex-shrink: 0;
+    }
+    .sidebar h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-left: 10px;
+    }
+    .nav-list {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    .nav-list li {
+      margin-bottom: 2px;
+    }
+    .nav-list a {
+      display: block;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-list a:hover {
+      background: var(--border);
+      text-decoration: none;
+    }
+    /* Main Content */
+    main {
+      flex: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 30px 80px 30px;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 24px 0 12px 0;
+    }
+    p {
+      margin-bottom: 16px;
+    }
+    ul, ol {
+      margin: 0 0 16px 24px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    /* Code and Tables */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 16px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      margin: 16px 0;
+      line-height: 1.5;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      background: var(--bg-surface);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      border: 0;
+      color: inherit;
+    }
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 16px 0 24px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    th, td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--bg-surface);
+      font-weight: 600;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    /* Alerts */
+    .alert {
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border-left: 4px solid;
+      font-size: 14px;
+    }
+    .alert-note {
+      background: var(--bg-surface);
+      border-color: #3b82f6;
+    }
+    .alert-tip {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #064e3b;
+    }
+    .alert-warning {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #78350f;
+    }
+    .alert-danger {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #7f1d1d;
+    }
+    body.dark .alert-tip { background: #064e3b; color: #ecfdf5; }
+    body.dark .alert-warning { background: #451a03; color: #fef3c7; }
+    body.dark .alert-danger { background: #450a0a; color: #fee2e2; }
+
+    /* Mobile Responsive */
+    @media (max-width: 900px) {
+      .sidebar {
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        bottom: 0;
+        z-index: 99;
+        width: 80%;
+        max-width: 300px;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+      }
+      .sidebar.open {
+        display: block;
+      }
+      .btn-mobile-nav {
+        display: inline-flex;
+      }
+      main {
+        padding: 20px 16px 60px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <button class="btn btn-mobile-nav" onclick="toggleSidebar()">☰ Menu</button>
+      <div class="logo-badge">Q</div>
+      <span>QuickNotes Manual</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="toggleTheme()">🌓 Theme</button>
+      <a href="/" class="btn" style="background: var(--accent); color: white; border: none;">← Open QuickNotes App</a>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <h4>Documentation Sections</h4>
+      <ul class="nav-list">
+        <li><a href="#quickstart">⚡ Quick Start & Credentials</a></li>
+        <li><a href="#overview">1. System Architecture</a></li>
+        <li><a href="#ui-layout">2. UI & Navigation</a></li>
+        <li><a href="#taking-notes">3. Taking Notes & Markdown</a></li>
+        <li><a href="#note-cards">4. Note Cards & Lightbox</a></li>
+        <li><a href="#editing-notes">5. Editing Notes Modal</a></li>
+        <li><a href="#search-filters">6. Multi-Dimensional Search</a></li>
+        <li><a href="#settings-labels">7. Settings: Labels</a></li>
+        <li><a href="#settings-appearance">8. Settings: Appearance</a></li>
+        <li><a href="#settings-storage">9. Settings: Storage (S3/R2/B2/GDrive)</a></li>
+        <li><a href="#settings-backups">10. Settings: Backups & Restore</a></li>
+        <li><a href="#settings-api">11. Settings: API Keys</a></li>
+        <li><a href="#settings-users">12. Settings: Users & Credentials</a></li>
+        <li><a href="#gotchas">13. Gotchas & What NOT to Do</a></li>
+        <li><a href="#examples">14. Practical Examples</a></li>
+  <div class="layout">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="nav-group-title">Table of Contents</div>
+      <a href="#quickstart" class="nav-link active">⚡ Quick Start & Credentials</a>
+      <a href="#architecture" class="nav-link">🏗️ Architecture Overview</a>
+      <a href="#storage" class="nav-link">☁️ Cloud & Local Storage</a>
+      <a href="#backups" class="nav-link">📦 Backups & Disaster Recovery</a>
+      <a href="#labels" class="nav-link">🏷️ 2-Step Hierarchical Labels</a>
+      <a href="#ai-agents" class="nav-link">🤖 AI Agent Integration</a>
+      <a href="#roles" class="nav-link">👥 User Roles & Access Tiers</a>
+      <a href="#shortcuts" class="nav-link">⌨️ Keyboard Shortcuts</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+      <h1>QuickNotes v1.5.7 — Comprehensive User Manual & Technical Reference</h1>
+
+      <!-- Section: Quick Start -->
+      <section id="quickstart" class="section">
+        <h2>⚡ Quick Start: First-Time Installation & Default Credentials</h2>
+        <p>QuickNotes is packaged as ready-to-deploy Docker containers. No local compilation or manual database seeding is required.</p>
+        
+        <h3>1. Default Login Credentials</h3>
+        <p>The system is pre-configured with two standard accounts initialized automatically on first startup:</p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Username</th>
+                <th>Default Password</th>
+                <th>Access Tier & Capabilities</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>👑 App Owner</strong></td>
+                <td><code>owner</code></td>
+                <td><code>quicknotes_owner_password_2026</code></td>
+                <td><strong>Full Administrator:</strong> Cloud Storage configuration (Google Drive, S3, R2, B2), Backups & Disaster Recovery, User Management, API Key generation, and Note Deletion.</td>
+              </tr>
+              <tr>
+                <td><strong>🤖 API User</strong></td>
+                <td><code>api_user</code></td>
+                <td><code>quicknotes_api_password_2026</code></td>
+                <td><strong>Restricted AI Agent Tier:</strong> Create/edit notes, manage labels, and upload attachments. Restricted from deleting notes or modifying system settings.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="alert alert-note">
+          <strong>Where are default credentials configured?</strong>
+          <br>
+          Default accounts are defined in <code>server/src/db/migrate.ts</code> and automatically created during the database schema migration on initial launch. In the Web UI, <strong>1-Click Quick Login</strong> buttons in the sign-in modal allow immediate access. You can update passwords or create new users at any time under <strong>Settings → Users</strong>.
+        </div>
+
+        <h3>2. First-Time Docker Compose Deployment</h3>
+        <p>Save the following <code>docker-compose.yml</code> file to any folder on your computer and run <code>docker compose up -d</code>:</p>
+        <pre><code>services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: quicknotes_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: quicknotes_db
+      POSTGRES_USER: quicknotes_user
+      POSTGRES_PASSWORD: quicknotes_password_2026
+    volumes:
+      - quicknotes_pgdata:/var/lib/postgresql
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quicknotes_user -d quicknotes_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: ghcr.io/uri-travoski/quicknotes:latest
+    container_name: quicknotes_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://quicknotes_user:quicknotes_password_2026@postgres:5432/quicknotes_db
+      NODE_ENV: production
+      UPLOAD_DIR: ./uploads
+      # Set your initial admin credentials here:
+      DEFAULT_OWNER_USERNAME: owner
+      DEFAULT_OWNER_PASSWORD: quicknotes_owner_password_2026
+      DEFAULT_API_USERNAME: api_user
+      DEFAULT_API_PASSWORD: quicknotes_api_password_2026
+    volumes:
+      - quicknotes_uploads:/app/uploads
+      - quicknotes_backups:/app/backups
+    ports:
+      - "3000:3000"
+
+volumes:
+  quicknotes_pgdata:
+    driver: local
+  quicknotes_uploads:
+    driver: local
+  quicknotes_backups:
+    driver: local</code></pre>
+        <p>Once started, access the application:</p>
+        <ul>
+          <li><strong>On this machine:</strong> <code>http://localhost:3000</code></li>
+          <li><strong>On your local network (phones, tablets, laptops):</strong> <code>http://&lt;LOCAL_IP&gt;:3000</code> (e.g. <code>http://192.168.68.101:3000</code>)</li>
+        </ul>
+        <div class="alert alert-tip">
+          <strong>📱 Mobile & PWA Installation:</strong> Open <code>http://&lt;LOCAL_IP&gt;:3000</code> on Safari (iOS) or Chrome (Android) and tap <strong>"Add to Home Screen"</strong> to install QuickNotes as a native mobile app.
+        </div>
+      </section>
+
+      <section id="overview">
+        <h2>1. System Architecture & Storage Model</h2>
+        <p>QuickNotes utilizes a decoupled client-server architecture engineered for sub-millisecond response times even with thousands of rich notes:</p>
+        <ul>
+          <li><strong>React Frontend (Port 3000):</strong> Vite, Tailwind CSS, Lucide Icons, and progressive scroll rendering.</li>
+          <li><strong>Express Backend (Port 5000):</strong> Node.js 26 REST API with Sharp for automated thumbnail generation and Multer for file uploads.</li>
+          <li><strong>PostgreSQL 18 Database:</strong> Stores structured text, note contents, tags, hierarchy tree, checklists, and attachment metadata pointers.</li>
+          <li><strong>Binary Storage (Local or Cloud):</strong> Stores actual binary assets (images, videos, documents, and thumbnails) on Local Disk (<code>/app/uploads</code>), AWS S3, Cloudflare R2, Backblaze B2, or Google Drive.</li>
+        </ul>
+        <div class="alert alert-note">
+          <strong>Database vs Binary Separation:</strong> PostgreSQL stores metadata (~3ms queries). The heavy binary files reside in your cloud bucket. When you restore the database on a fresh server, all attachment links immediately connect without copying gigabytes of files.
+        </div>
+      </section>
+
+      <section id="ui-layout">
+        <h2>2. User Interface & Layout Overview</h2>
+        <p>The interface is organized into two primary interaction areas:</p>
+        <h3>Top Header Bar</h3>
+        <ul>
+          <li><strong>Side Navigation Toggle (<code>PanelLeft</code> icon):</strong> On mobile/tablet screens (&lt; 1024px), appears when the sidebar is hidden. Tapping outside the sidebar hides it.</li>
+          <li><strong>Search & Filter Box:</strong> Centered input with real-time text query and dropdown filter button. Press <code>/</code> anywhere to focus.</li>
+          <li><strong>Right Menu:</strong> Toggle Grid/List view, Dark/Light theme, Settings, Help documentation, and Signout.</li>
+        </ul>
+        <h3>Sidebar Views</h3>
+        <ul>
+          <li><strong>All Notes:</strong> Active feed of unarchived notes with real-time counter.</li>
+          <li><strong>Starred:</strong> Favorite/pinned notes with counter.</li>
+          <li><strong>Archive:</strong> Stored notes preserved for reference.</li>
+          <li><strong>Trash:</strong> Soft-deleted notes with restore and permanent delete options.</li>
+          <li><strong>Labels Hierarchy:</strong> Root Categories (Level 1) with colored circles and Sub-Labels (Level 2) with vertical connector guides.</li>
+        </ul>
+      </section>
+
+      <section id="taking-notes">
+        <h2>3. Taking Notes & Rich Markdown Editor</h2>
+        <p>Click the <strong>"Take a note..."</strong> bar at the top of the feed to open the rich creator:</p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Markdown Syntax</th>
+                <th>Result</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code># Heading 1</code></td><td>Large Heading</td><td><code># Project Specs</code></td></tr>
+              <tr><td><code>## Heading 2</code></td><td>Medium Heading</td><td><code>## Architecture</code></td></tr>
+              <tr><td><code>- [ ] Task</code></td><td>Interactive Checklist</td><td><code>- [ ] Run benchmark</code></td></tr>
+              <tr><td><code>- [x] Done</code></td><td>Checked Task</td><td><code>- [x] Database indexing</code></td></tr>
+              <tr><td><code>**bold**</code></td><td><strong>Bold Text</strong></td><td><code>**Important SLA**</code></td></tr>
+              <tr><td><code>*italic*</code></td><td><em>Italic Text</em></td><td><code>*Emphasis*</code></td></tr>
+              <tr><td><code>`code`</code></td><td>Inline Code Pill</td><td><code>`GET /api/notes`</code></td></tr>
+              <tr><td><code>```ts ... ```</code></td><td>Syntax Highlighted Code</td><td>Multi-line code snippet</td></tr>
+              <tr><td><code>| A | B |</code></td><td>Formatted Table Grid</td><td>Table rows and headers</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="alert alert-tip">
+          <strong>Clipboard Paste:</strong> Press <code>Ctrl + V</code> / <code>Cmd + V</code> anywhere inside the creator or editor modal to paste screenshots directly from your clipboard!
+        </div>
+      </section>
+
+      <section id="note-cards">
+        <h2>4. Note Cards & Full Lightbox Viewer</h2>
+        <p>Notes are rendered in a responsive masonry grid or list view:</p>
+        <ul>
+          <li><strong>Thumbnail Collage:</strong> 1-image banner, 2-image split, or 3+ image grid with a <code>+N</code> count overlay.</li>
+          <li><strong>Video Badges:</strong> Native video thumbnails with play badges.</li>
+          <li><strong>In-Place Task Checkboxes:</strong> Checking tasks on the card updates the database directly without opening the editor.</li>
+          <li><strong>Lightbox Viewer:</strong> Clicking any image/video opens full-screen zoom, keyboard arrow navigation, and direct download.</li>
+        </ul>
+      </section>
+
+      <section id="editing-notes">
+        <h2>5. Editing Notes Modal</h2>
+        <p>Clicking anywhere on an existing note card opens the centered <strong>Note Modal</strong>:</p>
+        <ul>
+          <li>Full-height editing with live formatting toolbar.</li>
+          <li>Change note background color across 12 palette hues.</li>
+          <li>Add or remove individual image/video/document attachments.</li>
+          <li>Assign or detach 2-step hierarchical labels.</li>
+          <li><strong>Quick Save:</strong> Click <strong>Done</strong>, press <code>Ctrl + Enter</code>, press <code>Escape</code>, or click the backdrop.</li>
+        </ul>
+      </section>
+
+      <section id="search-filters">
+        <h2>6. Multi-Dimensional Search & Smart Filters</h2>
+        <p>Click the filter icon inside the search bar to reveal the comprehensive filter panel:</p>
+        <ul>
+          <li><strong>Multi-Label Filter:</strong> Select multiple tags simultaneously with <strong>AND</strong> (must have all) or <strong>OR</strong> (any tag) matching.</li>
+          <li><strong>Date Range Filter:</strong> Filter by Created Date or Updated Date with presets (<em>Today</em>, <em>Last 7 Days</em>, <em>Last 30 Days</em>, <em>This Month</em>) or custom calendar pickers.</li>
+          <li><strong>Content Type Pills:</strong> Filter by <em>Images</em>, <em>Files</em>, or <em>Checklists</em>.</li>
+          <li><strong>Color Palette:</strong> Filter by specific note background colors.</li>
+        </ul>
+      </section>
+
+      <section id="settings-labels">
+        <h2>7. Settings: Labels Management</h2>
+        <p>Navigate to <strong>Settings → Labels</strong> to organize your knowledge base:</p>
+        <ul>
+          <li><strong>Root Categories (Level 1):</strong> Create top-level categories with custom color circles (Mint, Coral, Sand, Blue, Blossom).</li>
+          <li><strong>Sub-Labels (Level 2):</strong> Group specific projects or topics under a parent category.</li>
+          <li><strong>Safe Deletion:</strong> Deleting a label detaches it from notes. Notes themselves are never deleted.</li>
+        </ul>
+      </section>
+
+      <section id="settings-appearance">
+        <h2>8. Settings: Appearance & Typography</h2>
+        <p>Customize fonts and sizes with real-time live preview:</p>
+        <ul>
+          <li><strong>Font Selection:</strong> Inter, Noto Sans, Plus Jakarta Sans, Merriweather, Playfair Display, Lora, System Default.</li>
+          <li><strong>Font Size Slider:</strong> Adjust between 13px (Small), 14px (Default), 15px (Medium), 16px (Large), 18px (Extra Large).</li>
+        </ul>
+      </section>
+
+      <section id="settings-storage">
+        <h2>9. Settings: Storage (Local Disk, AWS S3, Cloudflare R2, Backblaze B2, Google Drive)</h2>
+        <p>QuickNotes features a pluggable, multi-provider storage architecture that completely decouples text metadata from heavy binary files (images, videos, PDFs, spreadsheets, archives).</p>
+
+        <h3>How Storage Works Under the Hood</h3>
+        <ul>
+          <li><strong>Upload Pipeline:</strong> When you upload a file or paste an image from your clipboard (<code>Ctrl+V</code>), the Express backend receives the stream via Multer, uses Sharp to generate an optimized WebP thumbnail, and writes both the original asset and thumbnail to the active storage provider.</li>
+          <li><strong>Database Record:</strong> The PostgreSQL <code>attachments</code> table records the file's unique object key (<code>filename</code>), thumbnail key, original name, MIME type, file size, dimensions, and the <code>storage_provider</code> used at the time of upload.</li>
+          <li><strong>Zero-Lock-in Provider Tracking:</strong> Each attachment record stores its own <code>storage_provider</code>. If you upload 100 images to Local Disk and later switch to Cloudflare R2, <em>existing attachments continue to stream from Local Disk while new attachments go to R2</em>. Nothing breaks!</li>
+          <li><strong>Streaming & Lightbox:</strong> When viewing notes or opening the full-screen Lightbox, the server streams the file directly from your cloud bucket or local disk using authenticated signed streams.</li>
+        </ul>
+
+        <h3>Step-by-Step Setup Guides for Storage Providers</h3>
+
+        <h4>Option A: Local Disk Storage (Default)</h4>
+        <ul>
+          <li><strong>Storage Path:</strong> Files are saved to <code>/app/uploads</code> with thumbnails in <code>/app/uploads/thumbnails</code>.</li>
+          <li><strong>Docker Volume:</strong> Persisted across container restarts using the named volume <code>quicknotes_uploads</code>.</li>
+          <li><strong>How to use:</strong> No configuration required. Click <strong>Test Read/Write</strong> to verify filesystem permissions, then click <strong>Set Active</strong>.</li>
+        </ul>
+
+        <h4>Option B: AWS S3</h4>
+        <ol>
+          <li>In the AWS Console, create an S3 bucket (e.g. <code>my-quicknotes-prod</code>).</li>
+          <li>Create an IAM User with programmatic access and attach the <code>AmazonS3FullAccess</code> policy (or a custom policy scoped to your bucket ARN).</li>
+          <li>In <strong>Settings → Storage → S3-Compatible</strong>, enter:
+            <ul>
+              <li><strong>Endpoint URL:</strong> Leave <em>blank</em> (AWS S3 uses standard regional endpoints automatically).</li>
+              <li><strong>Bucket Name:</strong> <code>my-quicknotes-prod</code></li>
+              <li><strong>Region:</strong> e.g. <code>us-east-1</code>, <code>eu-west-1</code></li>
+              <li><strong>Access Key ID:</strong> Your IAM Access Key</li>
+              <li><strong>Secret Access Key:</strong> Your IAM Secret Access Key</li>
+            </ul>
+          </li>
+          <li>Click <strong>Test Connection</strong> to run a live read/write latency benchmark.</li>
+          <li>Click <strong>Save</strong>, then click <strong>Set Active</strong>.</li>
+        </ol>
+
+        <h4>Option C: Cloudflare R2 (Zero Egress Fees)</h4>
+        <ol>
+          <li>In the Cloudflare Dashboard, go to <strong>R2 Object Storage</strong> and click <strong>Create bucket</strong> (e.g. <code>quicknotes-r2</code>).</li>
+          <li>Under <strong>R2 Account Details</strong>, click <strong>Manage R2 API Tokens</strong> → <strong>Create API Token</strong> with <em>Object Read & Write</em> permissions.</li>
+          <li>Copy your <strong>Account ID</strong>, <strong>Access Key ID</strong>, and <strong>Secret Access Key</strong>.</li>
+          <li>In <strong>Settings → Storage → S3-Compatible</strong>, enter:
+            <ul>
+              <li><strong>Endpoint URL:</strong> <code>https://&lt;your-account-id&gt;.r2.cloudflarestorage.com</code></li>
+              <li><strong>Bucket Name:</strong> <code>quicknotes-r2</code></li>
+              <li><strong>Region:</strong> <code>auto</code></li>
+              <li><strong>Access Key ID:</strong> Your R2 Access Key ID</li>
+              <li><strong>Secret Access Key:</strong> Your R2 Secret Access Key</li>
+            </ul>
+          </li>
+          <li>Click <strong>Test Connection</strong>, then <strong>Save</strong> and <strong>Set Active</strong>.</li>
+        </ol>
+
+        <h4>Option D: Backblaze B2</h4>
+        <ol>
+          <li>In Backblaze B2, create a bucket with <em>Private</em> default visibility.</li>
+          <li>Under <strong>App Keys</strong>, generate an Application Key with read/write access to that bucket.</li>
+          <li>Note the S3 Endpoint listed on your Bucket Details page (e.g. <code>https://s3.us-west-004.backblazeb2.com</code>).</li>
+          <li>In <strong>Settings → Storage</strong>, enter Endpoint URL, Bucket Name, Region (e.g. <code>us-west-004</code>), Key ID, and Application Key.</li>
+          <li>Click <strong>Test Connection</strong>, <strong>Save</strong>, and <strong>Set Active</strong>.</li>
+        </ol>
+
+        <h4>Option E: Google Drive (OAuth 2.1 with PKCE & Service Account)</h4>
+        <p style="margin-bottom: 12px; color: var(--text-muted);">
+          QuickNotes offers two distinct authentication modes for Google Drive: <strong>1-Click OAuth 2.1 with PKCE</strong> (recommended for personal accounts) and <strong>Service Account (.json)</strong> (for automated enterprise workflows).
+        </p>
+
+        <h5 style="margin: 12px 0 6px 0; font-size: 14px; font-weight: 700;">Method 1: 1-Click OAuth 2.1 Sign-In with PKCE (Recommended)</h5>
+        <ol style="margin-bottom: 14px;">
+          <li>In <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>, create a project and enable the <strong>Google Drive API v3</strong> (under <em>APIs & Services → Library</em>).</li>
+          <li>Under <strong>OAuth consent screen</strong>, select <em>External</em>, fill in app name/emails, and add scopes:
+            <ul style="margin: 4px 0 6px 20px;">
+              <li><code>.../auth/drive.file</code> (Per-file access for note attachments)</li>
+              <li><code>.../auth/userinfo.email</code> (Displays connected account identity)</li>
+            </ul>
+            <em>Note: While in Testing status, add your Google account email under <strong>Test Users</strong>.</em>
+          </li>
+          <li>Under <strong>Credentials → Create Credentials → OAuth client ID</strong>, choose <strong>Web application</strong>:
+            <ul style="margin: 4px 0 6px 20px;">
+              <li><strong>Authorized JavaScript origins:</strong> <code>http://localhost:3000</code> (or your domain e.g. <code>https://notes.yourdomain.com</code>)</li>
+              <li><strong>Authorized redirect URIs:</strong> <code>http://localhost:3000/api/storage/gdrive/oauth/callback</code> (Copy from Settings → Storage → Google Drive)</li>
+            </ul>
+          </li>
+          <li>In <strong>Settings → Storage → Google Drive → OAuth 2.1</strong>:
+            <ul style="margin: 4px 0 6px 20px;">
+              <li>Paste your <strong>Google Client ID</strong> and <strong>Google Client Secret</strong>.</li>
+              <li>Click the blue <strong>"Sign in & Connect Google Drive"</strong> button.</li>
+              <li>Authenticate in the Google popup window. The window will automatically close and show your connected Google email with a green <strong>Connected</strong> badge.</li>
+            </ul>
+          </li>
+          <li>Click <strong>Test Connection</strong> to verify live connection latency and storage quota (e.g. <code>Sam Dabhi (email@domain.com) (58.9 GB / 5120 GB used)</code>).</li>
+          <li><em>(Optional)</em> Specify a custom <strong>Destination Folder ID</strong> or leave as <code>root</code>.</li>
+        </ol>
+
+        <h5 style="margin: 12px 0 6px 0; font-size: 14px; font-weight: 700;">Method 2: Google Service Account (.json)</h5>
+        <ol style="margin-bottom: 14px;">
+          <li>In Google Cloud Console, go to <strong>IAM & Admin → Service Accounts</strong> and create a service account.</li>
+          <li>Generate and download a <strong>JSON key</strong> for that service account.</li>
+          <li>In Google Drive, create a destination folder and <strong>Share</strong> that folder with the service account's email (granting <em>Editor</em> permissions). Copy the Folder ID from the URL.</li>
+          <li>In <strong>Settings → Storage → Google Drive → Service Account (.json)</strong>:
+            <ul style="margin: 4px 0 6px 20px;">
+              <li>Click <strong>Upload Service Account JSON File</strong> or paste the JSON text directly.</li>
+              <li>Enter the destination <strong>Folder ID</strong>.</li>
+            </ul>
+          </li>
+          <li>Click <strong>Test Connection</strong>, then <strong>Save</strong> and <strong>Set Active</strong>.</li>
+        </ol>
+
+        <div class="alert alert-tip">
+          <strong>Storage Best Practices (What to Do):</strong>
+          <ul style="margin: 6px 0 0 16px;">
+            <li>Always click <strong>Test Connection</strong> before clicking "Set Active" to confirm credentials and network latency.</li>
+            <li>Use dedicated IAM or API tokens with permissions restricted strictly to your QuickNotes bucket.</li>
+            <li>Enable CORS on your S3/R2 bucket if configuring direct client uploads.</li>
+          </ul>
+        </div>
+
+        <div class="alert alert-danger">
+          <strong>Storage Critical Gotchas (What NOT to Do):</strong>
+          <ul style="margin: 6px 0 0 16px;">
+            <li><strong>DO NOT delete or rename your cloud bucket:</strong> Existing notes store unique object keys pointing to that bucket. Deleting the bucket will break image and document links.</li>
+            <li><strong>DO NOT delete the <code>quicknotes_uploads</code> Docker volume:</strong> If you are using Local storage, deleting the Docker volume deletes your uploaded files.</li>
+            <li><strong>DO NOT include trailing slashes in Endpoint URLs:</strong> Use <code>https://&lt;account&gt;.r2.cloudflarestorage.com</code> without a trailing <code>/</code>.</li>
+            <li><strong>DO NOT enter an Endpoint URL for standard AWS S3:</strong> Leave it blank so the AWS SDK automatically constructs the correct regional endpoint.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="settings-backups">
+        <h2>10. Settings: Backups & Disaster Recovery</h2>
+        <p>QuickNotes includes a built-in automated backup and disaster recovery engine designed to protect your notes, tags, checklists, and attachment metadata against data loss.</p>
+
+        <h3>How Backups Work Under the Hood</h3>
+        <ul>
+          <li><strong>Native PostgreSQL Dump:</strong> When a backup is triggered, the backend executes <code>pg_dump</code> inside the PostgreSQL container, capturing the complete relational schema, all tables (<code>notes</code>, <code>tags</code>, <code>note_tags</code>, <code>attachments</code>, <code>users</code>, <code>storage_configs</code>), sequences, foreign keys, and indexes into a self-contained <code>database_dump.sql</code>.</li>
+          <li><strong>Metadata Manifest:</strong> The engine generates a <code>manifest.json</code> containing the schema version, total note count, tag count, attachment count, timestamp, and storage provider metadata.</li>
+          <li><strong>Standard ZIP Packaging:</strong> The SQL dump and manifest are packaged into a standard compressed <code>.zip</code> archive (e.g. <code>quicknotes_backup_2026-08-21T05-11-50-861Z.zip</code>).</li>
+          <li><strong>Cryptographic SHA-256 Integrity Verification:</strong> The engine calculates a cryptographic SHA-256 checksum of the entire archive and stores it in the <code>backups</code> table. Every backup is automatically verified upon creation and can be re-verified at any time with the <strong>ShieldCheck</strong> button.</li>
+        </ul>
+
+        <h3>Step-by-Step Guide: How to Create a Backup</h3>
+        <ol>
+          <li>Navigate to <strong>Settings</strong> (top-right menu) → <strong>Backups</strong>.</li>
+          <li>Select the Backup Storage Target: <em>Local Disk</em>, <em>S3 Cloud Bucket</em>, or <em>Google Drive</em>.</li>
+          <li>Click the green <strong>Run Backup Now</strong> button.</li>
+          <li>The process completes in ~1-3 seconds. The new backup appears in the <strong>Backup History</strong> table with a green <strong>"Verified & Valid"</strong> badge.</li>
+          <li>Click the blue backup filename link (e.g. <code>quicknotes_backup_2026-08-21T05-11-50-861Z.zip</code>) to download the archive directly to your local computer or offline storage drive.</li>
+        </ol>
+
+        <h3>Step-by-Step Guide: How to Restore a Backup (3 Methods)</h3>
+
+        <h4>Method 1: Instant In-App Restore (from Backup History)</h4>
+        <ol>
+          <li>In <strong>Settings → Backups</strong>, scroll to the <strong>Backup History</strong> list.</li>
+          <li>Find the backup you wish to restore.</li>
+          <li>Click the <strong>Restore icon</strong> (↺ circular arrow) next to that backup row.</li>
+          <li>Read the confirmation dialog and click <strong>Restore Backup</strong>.</li>
+          <li>The backend extracts <code>database_dump.sql</code>, executes the restore inside a transaction, and automatically reloads all notes, tags, and settings.</li>
+        </ol>
+
+        <h4>Method 2: In-App Upload & Restore (from External .zip File)</h4>
+        <ol>
+          <li>In <strong>Settings → Backups</strong>, locate the <strong>Restore from External Archive File</strong> card.</li>
+          <li>Click <strong>Upload & Restore (.zip)</strong> and select any previously downloaded <code>quicknotes_backup_*.zip</code> file from your machine.</li>
+          <li>Confirm the dialog. The server uploads the archive, validates the SHA-256 checksum and manifest, restores the PostgreSQL database, and refreshes the application.</li>
+        </ol>
+
+        <h4>Method 3: Full Disaster Recovery on a Fresh Server / Host</h4>
+        <p>If your entire server was destroyed or you are migrating to a brand-new cloud VPS, follow these disaster recovery steps:</p>
+        <ol>
+          <li>Deploy QuickNotes on the new server using Docker:
+            <pre><code>git clone &lt;repo-url&gt; && cd QuickNotes
+docker-compose up -d</code></pre>
+          </li>
+          <li>Extract your backup archive on your local terminal:
+            <pre><code>unzip quicknotes_backup_2026-08-21.zip
+# Extracts: database_dump.sql and manifest.json</code></pre>
+          </li>
+          <li>Restore the SQL dump into the PostgreSQL container:
+            <pre><code>docker exec -i quicknotes_postgres psql -U quicknotes_user -d quicknotes_db < database_dump.sql</code></pre>
+          </li>
+          <li>Ensure your cloud storage bucket credentials (AWS S3, Cloudflare R2, Backblaze B2, Google Drive) are configured in <code>.env</code> or via Settings.</li>
+          <li>Open <code>http://&lt;server-ip&gt;:3000</code> in your browser. <strong>All your notes, hierarchical tags, and cloud attachments are 100% restored and fully functional!</strong></li>
+        </ol>
+
+        <div class="alert alert-tip">
+          <strong>Backup Best Practices (What to Do):</strong>
+          <ul style="margin: 6px 0 0 16px;">
+            <li>Download backup <code>.zip</code> files regularly to an external hard drive or secure cloud storage.</li>
+            <li>Always verify the backup status shows <strong>"Verified & Valid"</strong> with a valid SHA-256 hash.</li>
+            <li>Store your cloud bucket credentials securely alongside your database backups.</li>
+            <li>Periodically test a restore on a local or staging environment to ensure disaster readiness.</li>
+          </ul>
+        </div>
+
+        <div class="alert alert-danger">
+          <strong>Backup Critical Gotchas (What NOT to Do):</strong>
+          <ul style="margin: 6px 0 0 16px;">
+            <li><strong>DO NOT restore a backup while users are actively editing:</strong> Restoring completely replaces the current database with the backup snapshot. Any unsaved edits made since the backup was generated will be overwritten.</li>
+            <li><strong>DO NOT manually alter <code>database_dump.sql</code> or <code>manifest.json</code> inside the <code>.zip</code>:</strong> Modifying files inside the archive changes its checksum and will trigger a SHA-256 integrity mismatch error upon verification.</li>
+            <li><strong>DO NOT delete your cloud storage bucket after making a database backup:</strong> The database SQL dump stores all notes, metadata, and object keys (~2MB), while the heavy images and videos reside in your bucket. Both are required for full disaster recovery.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="settings-api">
+        <h2>11. Settings: API Keys & Developer Integrations</h2>
+        <p>Generate API Keys with Read-Only or Read/Write scopes. Pass the key in headers:</p>
+        <pre><code>curl -X GET "http://localhost:3000/api/notes" \
+  -H "Authorization: Bearer sk_qn_your_token_here"</code></pre>
+      </section>
+
+      <section id="settings-users">
+        <h2>12. Settings: Users & Role Permissions</h2>
+        <p>QuickNotes features a dual-tier permission model designed for personal ownership combined with secure AI agent integration:</p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Default Username</th>
+                <th>Default Password</th>
+                <th>Permissions & Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>👑 Owner</strong></td>
+                <td><code>owner</code></td>
+                <td><code>quicknotes_owner_password_2026</code></td>
+                <td><strong>Full Administrator:</strong> Can configure Cloud Storage, run/verify/restore Backups, generate API Keys, create/manage Users, change passwords, and permanently delete notes.</td>
+              </tr>
+              <tr>
+                <td><strong>🤖 API User</strong></td>
+                <td><code>api_user</code></td>
+                <td><code>quicknotes_api_password_2026</code></td>
+                <td><strong>AI Automation Tier:</strong> Designed for AI agents (Claude, Gemini, Cursor). Can create/edit notes, manage labels, and upload attachments. Restricted from deleting notes or accessing Settings.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Where Credentials are Configured & Managed</h3>
+        <ul>
+          <li><strong>Initial Setup:</strong> Defined in <code>server/src/db/migrate.ts</code> and automatically created during initial database migration.</li>
+          <li><strong>Changing Passwords:</strong> Log in as <code>owner</code>, go to <strong>Settings → Users</strong>, and click <strong>"Change Password"</strong> next to any user.</li>
+          <li><strong>Creating New Users:</strong> In <strong>Settings → Users</strong>, click <strong>"Create User"</strong> to add additional accounts.</li>
+          <li><strong>1-Click Quick Login:</strong> The login modal provides instant 1-click buttons for rapid testing and role switching.</li>
+        </ul>
+      </section>
+
+      <section id="gotchas">
+        <h2>13. Gotchas & What NOT to Do</h2>
+        <div class="alert alert-danger">
+          <strong>Permanent Deletion:</strong> Clicking "Delete Forever" or "Empty Trash" permanently removes records. This cannot be undone without a backup.
+        </div>
+        <div class="alert alert-warning">
+          <strong>Avoid Large Base64 in Text:</strong> Do not paste huge base64 strings into markdown text. Always use attachment uploads or clipboard paste (<code>Ctrl+V</code>) for fast thumbnail generation and database performance.
+        </div>
+        <div class="alert alert-note">
+          <strong>Cloud Credentials on Restore:</strong> When restoring a database on a new server, ensure your storage credentials (S3/R2/B2) match the bucket name so attachments open immediately.
+        </div>
+      </section>
+
+      <section id="examples">
+        <h2>14. Practical Examples & Code Snippets</h2>
+        <h3>Creating a Note via Python REST API</h3>
+        <pre><code>import requests
+
+API_URL = "http://localhost:3000/api/notes"
+API_TOKEN = "sk_qn_your_token_here"
+
+payload = {
+    "title": "Automated Server Health Check",
+    "content": "## System Status\n- [x] CPU Load < 25%\n- [x] Latency: 2.4ms",
+    "color": "mint",
+    "is_starred": True
+}
+
+headers = {"Authorization": f"Bearer {API_TOKEN}", "Content-Type": "application/json"}
+response = requests.post(API_URL, json=payload, headers=headers)
+print("Created Note:", response.json())</code></pre>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      if (document.body.classList.contains('dark')) {
+        document.body.classList.remove('dark');
+        document.body.classList.add('light');
+        localStorage.setItem('quicknotes_manual_theme', 'light');
+      } else {
+        document.body.classList.remove('light');
+        document.body.classList.add('dark');
+        localStorage.setItem('quicknotes_manual_theme', 'dark');
+      }
+    }
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+    // Load saved theme preference
+    const savedTheme = localStorage.getItem('quicknotes_manual_theme') || localStorage.getItem('saved_manual_theme');
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+    }
+  </script>
+</body>
+</html>

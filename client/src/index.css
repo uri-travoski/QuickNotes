@@ -1,0 +1,402 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-font-family: 'Inter', 'Noto Sans', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-scale: 1;
+}
+
+@layer base {
+  html {
+    /* Fixed standard 16px root so rem spacing (p-*, m-*, gap-*, w-*, h-*) remains perfectly stable */
+    font-size: 16px;
+  }
+
+  body {
+    @apply bg-[#ffffff] dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] antialiased selection:bg-amber-200 dark:selection:bg-amber-900;
+    font-family: var(--app-font-family);
+    font-size: calc(1.10rem * var(--font-scale, 1));
+  }
+
+  /* Ensure inputs, buttons, textareas, selects inherit global font family */
+  input, button, textarea, select, optgroup {
+    font-family: inherit;
+  }
+}
+
+/* Custom scrollbars matching Google Keep with reduced radius */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.25);
+  border-radius: 3px; /* Reduced by 25% from 4px */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.45);
+}
+
+/* Multi-column masonry layout */
+.masonry-grid {
+  column-count: 1;
+  column-gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .masonry-grid {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-grid {
+    column-count: 3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .masonry-grid {
+    column-count: 4;
+  }
+}
+
+@media (min-width: 1536px) {
+  .masonry-grid {
+    column-count: 5;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+/* Sidebar Label Typography & Spacing (Desktop View Only) */
+@media (min-width: 1024px) {
+  .sidebar-label-item {
+    font-size: calc(0.775rem * var(--font-scale, 1)) !important;
+    line-height: 0.9 !important;
+    font-weight: 400 !important;
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+    padding-left: 0 !important;
+  }
+}
+
+/* ====================================================
+   Coffee Theme - Warm Artisanal Paper & Espresso Palette
+   ==================================================== */
+html.theme-coffee,
+html.theme-kraft {
+  --bg-coffee-canvas: #f3ece0;
+  --bg-coffee-sidebar: #e9dece;
+  --bg-coffee-header: #f3ece0;
+  --bg-coffee-card: #fbf8f1;
+  --border-coffee: #dfd3c0;
+  --text-coffee-primary: #3c2a1d;
+  --text-coffee-secondary: #5a4738;
+  --text-coffee-muted: #806f60;
+  --text-coffee-title: #734822;
+  --accent-coffee: #7c4a27;
+  --accent-coffee-hover: #683c1d;
+  --accent-coffee-pill: #d5c4af;
+}
+
+html.theme-coffee body,
+html.theme-kraft body {
+  background-color: #f3ece0 !important;
+  color: #3c2a1d !important;
+}
+
+html.theme-coffee ::selection,
+html.theme-kraft ::selection {
+  background-color: #d5c4af !important;
+  color: #3b291a !important;
+}
+
+/* Main Layout Canvas */
+html.theme-coffee .min-h-screen,
+html.theme-kraft .min-h-screen {
+  background-color: #f3ece0 !important;
+}
+
+/* Header */
+html.theme-coffee header,
+html.theme-kraft header {
+  background-color: #f3ece0 !important;
+  border-bottom-color: #dfd3c0 !important;
+}
+
+html.theme-coffee header span.text-gray-800,
+html.theme-coffee header .dark\:text-gray-100,
+html.theme-kraft header span.text-gray-800,
+html.theme-kraft header .dark\:text-gray-100 {
+  color: #3c2a1d !important;
+}
+
+html.theme-coffee header button,
+html.theme-kraft header button {
+  color: #5a4738 !important;
+}
+
+html.theme-coffee header button:hover,
+html.theme-kraft header button:hover {
+  background-color: #e8dece !important;
+  color: #3c2a1d !important;
+}
+
+/* Sidebar */
+html.theme-coffee aside,
+html.theme-kraft aside {
+  background-color: #e9dece !important;
+  border-right-color: #dfd3c0 !important;
+}
+
+/* Sidebar active navigation view item (e.g. All Notes) */
+html.theme-coffee aside .bg-amber-100,
+html.theme-coffee aside .dark\:bg-amber-950\/80,
+html.theme-kraft aside .bg-amber-100,
+html.theme-kraft aside .dark\:bg-amber-950\/80 {
+  background-color: #d5c4af !important;
+  color: #3b291a !important;
+}
+
+html.theme-coffee aside .bg-amber-100 .text-amber-600,
+html.theme-coffee aside .dark\:bg-amber-950\/80 .dark\:text-amber-400,
+html.theme-kraft aside .bg-amber-100 .text-amber-600,
+html.theme-kraft aside .dark\:bg-amber-950\/80 .dark\:text-amber-400 {
+  color: #6d4529 !important;
+}
+
+/* Sidebar active counter badge */
+html.theme-coffee aside .bg-amber-200\/80,
+html.theme-coffee aside .dark\:bg-amber-900\/80,
+html.theme-kraft aside .bg-amber-200\/80,
+html.theme-kraft aside .dark\:bg-amber-900\/80 {
+  background-color: #5c4028 !important;
+  color: #fbf8f1 !important;
+}
+
+/* Sidebar inactive counter badges */
+html.theme-coffee aside .bg-gray-100,
+html.theme-coffee aside .dark\:bg-\[\#3c4043\],
+html.theme-kraft aside .bg-gray-100,
+html.theme-kraft aside .dark\:bg-\[\#3c4043\] {
+  background-color: #d5c4af !important;
+  color: #5a4738 !important;
+}
+
+/* Sidebar inactive navigation & label links */
+html.theme-coffee aside .text-gray-700,
+html.theme-coffee aside .dark\:text-gray-300,
+html.theme-kraft aside .text-gray-700,
+html.theme-kraft aside .dark\:text-gray-300 {
+  color: #4a382a !important;
+}
+
+html.theme-coffee aside button:hover:not(.bg-amber-100),
+html.theme-coffee aside .sidebar-label-item:hover:not(.bg-amber-100),
+html.theme-kraft aside button:hover:not(.bg-amber-100),
+html.theme-kraft aside .sidebar-label-item:hover:not(.bg-amber-100) {
+  background-color: #decfbc !important;
+  color: #3b291a !important;
+}
+
+/* Labels section header & gear in sidebar */
+html.theme-coffee aside .text-gray-400,
+html.theme-kraft aside .text-gray-400 {
+  color: #806f60 !important;
+}
+
+/* Search input & Filters button */
+html.theme-coffee input[type="text"],
+html.theme-coffee input[type="password"],
+html.theme-coffee input[type="search"],
+html.theme-coffee textarea,
+html.theme-coffee select,
+html.theme-kraft input[type="text"],
+html.theme-kraft input[type="password"],
+html.theme-kraft input[type="search"],
+html.theme-kraft textarea,
+html.theme-kraft select {
+  background-color: #fbf8f1 !important;
+  border-color: #dfd3c0 !important;
+  color: #3c2a1d !important;
+}
+
+html.theme-coffee input::placeholder,
+html.theme-coffee textarea::placeholder,
+html.theme-kraft input::placeholder,
+html.theme-kraft textarea::placeholder {
+  color: #9a8978 !important;
+}
+
+/* Note Creator & Note Cards */
+html.theme-coffee .shadow-keep,
+html.theme-coffee .shadow-keep-hover,
+html.theme-coffee .shadow-keep-modal,
+html.theme-kraft .shadow-keep,
+html.theme-kraft .shadow-keep-hover,
+html.theme-kraft .shadow-keep-modal {
+  border-color: #dfd3c0 !important;
+  box-shadow: 0 1px 3px 0 rgba(70, 50, 30, 0.08) !important;
+}
+
+html.theme-coffee div[class*="bg-white"],
+html.theme-coffee div[class*="dark:bg-[#202124]"],
+html.theme-coffee div[class*="dark:bg-[#28292c]"],
+html.theme-coffee div[class*="dark:bg-[#2d2e30]"],
+html.theme-kraft div[class*="bg-white"],
+html.theme-kraft div[class*="dark:bg-[#202124]"],
+html.theme-kraft div[class*="dark:bg-[#28292c]"],
+html.theme-kraft div[class*="dark:bg-[#2d2e30]"] {
+  border-color: #dfd3c0;
+}
+
+/* Note Titles inside Cards & Markdown (matches warm cinnamon serif in screenshot) */
+html.theme-coffee .group h1,
+html.theme-coffee .group h2,
+html.theme-coffee .group h3,
+html.theme-coffee .note-coffee-title,
+html.theme-kraft .group h1,
+html.theme-kraft .group h2,
+html.theme-kraft .group h3,
+html.theme-kraft .note-kraft-title {
+  color: #734822 !important;
+  font-family: 'Merriweather', 'Georgia', serif !important;
+  font-weight: 700 !important;
+}
+
+/* Note Markdown & Body Text */
+html.theme-coffee .text-gray-800,
+html.theme-coffee .dark\:text-gray-200,
+html.theme-coffee .text-gray-900,
+html.theme-coffee .dark\:text-gray-100,
+html.theme-kraft .text-gray-800,
+html.theme-kraft .dark\:text-gray-200,
+html.theme-kraft .text-gray-900,
+html.theme-kraft .dark\:text-gray-100 {
+  color: #3c2a1d !important;
+}
+
+html.theme-coffee .text-gray-500,
+html.theme-coffee .dark\:text-gray-400,
+html.theme-kraft .text-gray-500,
+html.theme-kraft .dark\:text-gray-400 {
+  color: #806f60 !important;
+}
+
+html.theme-coffee .text-gray-400,
+html.theme-coffee .dark\:text-gray-500,
+html.theme-kraft .text-gray-400,
+html.theme-kraft .dark\:text-gray-500 {
+  color: #9a8978 !important;
+}
+
+/* Note action icons (star, pencil, 3-dots) */
+html.theme-coffee .group button,
+html.theme-kraft .group button {
+  color: #806f60;
+}
+
+html.theme-coffee .group button:hover,
+html.theme-kraft .group button:hover {
+  color: #3c2a1d !important;
+}
+
+/* Show more / Show less & link toggles */
+html.theme-coffee a,
+html.theme-coffee button.text-gray-900,
+html.theme-coffee button.text-gray-500,
+html.theme-kraft a,
+html.theme-kraft button.text-gray-900,
+html.theme-kraft button.text-gray-500 {
+  color: #734822 !important;
+}
+
+/* Tag / Label chips on cards */
+html.theme-coffee span[class*="bg-gray-100"],
+html.theme-coffee span[class*="dark:bg-[#3c4043]"],
+html.theme-kraft span[class*="bg-gray-100"],
+html.theme-kraft span[class*="dark:bg-[#3c4043]"] {
+  background-color: #e8dece !important;
+  color: #5c4028 !important;
+  border-color: #dfd3c0 !important;
+}
+
+/* Primary buttons (Amber -> Warm Leather) */
+html.theme-coffee .bg-amber-500,
+html.theme-kraft .bg-amber-500 {
+  background-color: #7c4a27 !important;
+  color: #ffffff !important;
+}
+
+html.theme-coffee .hover\:bg-amber-600:hover,
+html.theme-coffee .bg-amber-600,
+html.theme-kraft .hover\:bg-amber-600:hover,
+html.theme-kraft .bg-amber-600 {
+  background-color: #683c1d !important;
+}
+
+html.theme-coffee .text-amber-500,
+html.theme-coffee .text-amber-600,
+html.theme-coffee .dark\:text-amber-400,
+html.theme-kraft .text-amber-500,
+html.theme-kraft .text-amber-600,
+html.theme-kraft .dark\:text-amber-400 {
+  color: #7c4a27 !important;
+}
+
+html.theme-coffee .border-amber-500,
+html.theme-kraft .border-amber-500 {
+  border-color: #7c4a27 !important;
+}
+
+/* Modal Dialogs (Settings, Note, Confirm, Auth, Help) */
+html.theme-coffee .animate-scale-in,
+html.theme-coffee div[class*="rounded-2xl"][class*="shadow-keep-modal"],
+html.theme-kraft .animate-scale-in,
+html.theme-kraft div[class*="rounded-2xl"][class*="shadow-keep-modal"] {
+  background-color: #fbf8f1 !important;
+  border-color: #dfd3c0 !important;
+}
+
+html.theme-coffee .border-b,
+html.theme-coffee .border-t,
+html.theme-coffee .border-r,
+html.theme-kraft .border-b,
+html.theme-kraft .border-t,
+html.theme-kraft .border-r {
+  border-color: #dfd3c0 !important;
+}
+
+/* Settings Modal Sidebar */
+html.theme-coffee nav button.bg-amber-500,
+html.theme-kraft nav button.bg-amber-500 {
+  background-color: #d5c4af !important;
+  color: #3b291a !important;
+}
+
+html.theme-coffee nav button:hover:not(.bg-amber-500),
+html.theme-kraft nav button:hover:not(.bg-amber-500) {
+  background-color: #e8dece !important;
+  color: #3c2a1d !important;
+}
+
+/* Modal backdrop */
+html.theme-coffee .bg-black\/40,
+html.theme-coffee .dark\:bg-black\/60,
+html.theme-kraft .bg-black\/40,
+html.theme-kraft .dark\:bg-black\/60 {
+  background-color: rgba(45, 30, 20, 0.45) !important;
+}
+
+

@@ -1,0 +1,29 @@
+{
+  "name": "QuickNotes - Notes & Attachments",
+  "short_name": "QuickNotes",
+  "description": "Google Keep type notes web app with multi-image thumbnails, attachments, 2-step nested labels, and AI agent integration.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#202124",
+  "theme_color": "#FBBC04",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
