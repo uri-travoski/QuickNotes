@@ -17,6 +17,8 @@ import {
   RefreshCw,
   Loader2,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { StorageConfig } from '../../types';
 import * as api from '../../api/client';
@@ -67,6 +69,9 @@ export const StorageSettings: React.FC = () => {
   const [copiedRedirectUri, setCopiedRedirectUri] = useState(false);
   const [showJsonAutoFill, setShowJsonAutoFill] = useState(false);
   const [pastedJson, setPastedJson] = useState('');
+  const [showClientSecret, setShowClientSecret] = useState(false);
+  const [showRefreshToken, setShowRefreshToken] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   const redirectUri = `${window.location.origin}/api/storage/gdrive/oauth/callback`;
 
@@ -149,7 +154,28 @@ export const StorageSettings: React.FC = () => {
     );
   }
 
+  const isClientSecretClientId =
+    !!gdriveConfig.client_secret &&
+    !gdriveConfig.client_secret.includes('••') &&
+    (gdriveConfig.client_secret.endsWith('.apps.googleusercontent.com') ||
+      (!!gdriveConfig.client_id && gdriveConfig.client_secret.trim() === gdriveConfig.client_id.trim()));
+
+  const isRefreshTokenClientSecret =
+    !!gdriveConfig.refresh_token &&
+    !gdriveConfig.refresh_token.includes('••') &&
+    gdriveConfig.refresh_token.startsWith('GOCSPX-');
+
   const handleTestConnection = async (type: 'local' | 's3' | 'gdrive') => {
+    if (type === 'gdrive') {
+      if (isClientSecretClientId) {
+        showToast('Error: Client Secret cannot be a Client ID (.apps.googleusercontent.com)');
+        return;
+      }
+      if (isRefreshTokenClientSecret) {
+        showToast('Error: The string starting with GOCSPX- is a Client Secret, not a Refresh Token');
+        return;
+      }
+    }
     setTestingType(type);
     try {
       let config: any = {};
@@ -186,6 +212,16 @@ export const StorageSettings: React.FC = () => {
   };
 
   const handleSaveConfig = async (type: 'local' | 's3' | 'gdrive', setActive: boolean = true) => {
+    if (type === 'gdrive') {
+      if (isClientSecretClientId) {
+        showToast('Error: Client Secret cannot be a Client ID (.apps.googleusercontent.com)');
+        return;
+      }
+      if (isRefreshTokenClientSecret) {
+        showToast('Error: The string starting with GOCSPX- is a Client Secret, not a Refresh Token');
+        return;
+      }
+    }
     try {
       let config = {};
       if (type === 's3') {
@@ -208,6 +244,14 @@ export const StorageSettings: React.FC = () => {
   };
 
   const handleSaveAndTestGoogleDrive = async () => {
+    if (isClientSecretClientId) {
+      showToast('Error: Client Secret cannot be a Client ID (.apps.googleusercontent.com)');
+      return;
+    }
+    if (isRefreshTokenClientSecret) {
+      showToast('Error: The string starting with GOCSPX- is a Client Secret, not a Refresh Token');
+      return;
+    }
     try {
       setTestingType('gdrive');
       const config = {
@@ -286,35 +330,40 @@ export const StorageSettings: React.FC = () => {
     // Open popup immediately on user click to prevent browser popup blockers from blocking it
     const popup = window.open(
       'about:blank',
-      'Google Drive Authorization',
+      'Google_Drive_Authorization',
       `toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=${width},height=${height},top=${top},left=${left}`
     );
 
     if (popup) {
-      popup.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Connecting to Google Drive...</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #202124; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-            .card { background: #2d2e30; border: 1px solid #5f6368; border-radius: 16px; padding: 32px; max-width: 400px; text-align: center; }
-            .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #4285f4; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
-            @keyframes spin { to { transform: rotate(360deg); } }
-            h3 { margin: 0 0 8px; font-size: 16px; }
-            p { color: #9aa0a6; font-size: 13px; margin: 0; }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="spinner"></div>
-            <h3>Connecting to Google...</h3>
-            <p>Please wait while we redirect you to Google's sign-in screen.</p>
-          </div>
-        </body>
-        </html>
-      `);
+      try {
+        popup.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Connecting to Google Drive...</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #202124; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+              .card { background: #2d2e30; border: 1px solid #5f6368; border-radius: 16px; padding: 32px; max-width: 400px; text-align: center; }
+              .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #4285f4; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+              @keyframes spin { to { transform: rotate(360deg); } }
+              h3 { margin: 0 0 8px; font-size: 16px; }
+              p { color: #9aa0a6; font-size: 13px; margin: 0; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="spinner"></div>
+              <h3>Connecting to Google...</h3>
+              <p>Please wait while we redirect you to Google's sign-in screen.</p>
+            </div>
+          </body>
+          </html>
+        `);
+        popup.document.close();
+      } catch (e) {
+        // Document write fallback
+      }
     }
 
     try {
@@ -364,6 +413,21 @@ export const StorageSettings: React.FC = () => {
     setCopiedRedirectUri(true);
     showToast('Redirect URI copied to clipboard');
     setTimeout(() => setCopiedRedirectUri(false), 2500);
+  };
+
+  const handleCreateGoogleDriveFolder = async () => {
+    try {
+      setIsCreatingFolder(true);
+      const res = await api.createGoogleDriveFolder('QuickNotes');
+      setGdriveConfig(prev => ({ ...prev, folder_id: res.folderId }));
+      showToast(`Folder "${res.folderName}" created in Google Drive!`);
+      // Automatically test connection with the new folder ID
+      await handleTestConnection('gdrive');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to create Google Drive folder');
+    } finally {
+      setIsCreatingFolder(false);
+    }
   };
 
   const isGDriveOAuthConnected = !!(gdriveConfig.connected_email || gdriveConfig.has_refresh_token || gdriveConfig.refresh_token);
@@ -864,13 +928,33 @@ export const StorageSettings: React.FC = () => {
                       </label>
                       <span className="text-[11px] text-gray-400">Stored — leave blank to keep it.</span>
                     </div>
-                    <input
-                      type="password"
-                      placeholder="•••••••• (set)"
-                      value={gdriveConfig.client_secret}
-                      onChange={(e) => setGdriveConfig({ ...gdriveConfig, client_secret: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showClientSecret ? 'text' : 'password'}
+                        placeholder="•••••••• (set) or GOCSPX-..."
+                        value={gdriveConfig.client_secret}
+                        onChange={(e) => setGdriveConfig({ ...gdriveConfig, client_secret: e.target.value })}
+                        className={`w-full h-10 pl-3.5 pr-10 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border ${
+                          isClientSecretClientId
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                            : 'border-gray-200 dark:border-[#3c4043] focus:border-amber-500 focus:ring-amber-500/20'
+                        } text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:ring-2 transition-all`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowClientSecret(!showClientSecret)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                        title={showClientSecret ? 'Hide secret' : 'Show secret'}
+                      >
+                        {showClientSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {isClientSecretClientId && (
+                      <p className="text-[11px] text-red-500 mt-1 font-medium flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>This looks like a Google Client ID, not a Client Secret. Client secrets in Google Cloud start with "GOCSPX-".</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* 3. Refresh Token */}
@@ -883,13 +967,33 @@ export const StorageSettings: React.FC = () => {
                         {gdriveConfig.has_refresh_token ? '•••••••• (set) — leave blank to keep it.' : 'Paste your 1//04... refresh token'}
                       </span>
                     </div>
-                    <input
-                      type="password"
-                      placeholder={gdriveConfig.has_refresh_token ? '•••••••• (set)' : '1//04...'}
-                      value={gdriveConfig.refresh_token}
-                      onChange={(e) => setGdriveConfig({ ...gdriveConfig, refresh_token: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showRefreshToken ? 'text' : 'password'}
+                        placeholder={gdriveConfig.has_refresh_token ? '•••••••• (set)' : '1//04...'}
+                        value={gdriveConfig.refresh_token}
+                        onChange={(e) => setGdriveConfig({ ...gdriveConfig, refresh_token: e.target.value })}
+                        className={`w-full h-10 pl-3.5 pr-10 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border ${
+                          isRefreshTokenClientSecret
+                            ? 'border-amber-500 focus:border-amber-500 focus:ring-amber-500/20'
+                            : 'border-gray-200 dark:border-[#3c4043] focus:border-amber-500 focus:ring-amber-500/20'
+                        } text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:ring-2 transition-all`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRefreshToken(!showRefreshToken)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                        title={showRefreshToken ? 'Hide token' : 'Show token'}
+                      >
+                        {showRefreshToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {isRefreshTokenClientSecret && (
+                      <p className="text-[11px] text-amber-500 mt-1 font-medium flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>The string starting with "GOCSPX-" is a Client Secret, not a Refresh Token. Refresh tokens start with "1//". Use "1-Click Browser Login" or OAuth Playground to generate one.</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* 4. Folder ID */}
@@ -898,15 +1002,30 @@ export const StorageSettings: React.FC = () => {
                       <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
                         Folder ID
                       </label>
-                      <span className="text-[11px] text-gray-400">The Drive folder to store files in. Blank = My Drive root.</span>
+                      <span className="text-[11px] text-gray-400">Blank or "root" = My Drive root.</span>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="e.g. 1EHupLaI-Q8SbuhTaSi9oYrdu... (or leave as 'root')"
-                      value={gdriveConfig.folder_id}
-                      onChange={(e) => setGdriveConfig({ ...gdriveConfig, folder_id: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="e.g. 1EHupLaI-Q8SbuhTaSi9oYrdu... (or leave as 'root')"
+                        value={gdriveConfig.folder_id}
+                        onChange={(e) => setGdriveConfig({ ...gdriveConfig, folder_id: e.target.value })}
+                        className="flex-1 h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                      />
+                      <button
+                        type="button"
+                        disabled={isCreatingFolder || !isGDriveOAuthConnected}
+                        onClick={handleCreateGoogleDriveFolder}
+                        className="h-10 px-3.5 rounded-[6px] bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={isGDriveOAuthConnected ? "Create a dedicated 'QuickNotes' folder in your Google Drive automatically" : "Connect Google Drive first to create a folder"}
+                      >
+                        {isCreatingFolder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Folder className="w-3.5 h-3.5" />}
+                        <span>{isCreatingFolder ? 'Creating...' : 'Create Folder'}</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                      Note: Under Google security rules, apps can only access folders created by the app. Click <strong>Create Folder</strong> to auto-create a dedicated folder, or enter <code>root</code>.
+                    </p>
                   </div>
 
                   {/* Action Buttons Bar */}

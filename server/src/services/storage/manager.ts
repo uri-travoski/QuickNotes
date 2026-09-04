@@ -131,6 +131,12 @@ export class StorageManager {
         if (!config.connected_email && prev.connected_email) {
           finalConfig = { ...finalConfig, connected_email: prev.connected_email };
         }
+        if (finalConfig.client_secret && (finalConfig.client_secret.endsWith('.apps.googleusercontent.com') || (finalConfig.client_id && finalConfig.client_secret === finalConfig.client_id))) {
+          throw new Error('Invalid Client Secret: A Google Client ID was provided instead of a Client Secret. Client secrets in Google Cloud usually begin with "GOCSPX-".');
+        }
+        if (finalConfig.refresh_token && finalConfig.refresh_token.startsWith('GOCSPX-')) {
+          throw new Error('Invalid Refresh Token: A Client Secret (starting with "GOCSPX-") was provided instead of a Refresh Token. Refresh tokens usually begin with "1//". Use "1-Click Browser Login" or Google OAuth Playground.');
+        }
       }
       const testProvider = finalConfig ? new GoogleDriveStorageProvider(finalConfig) : this.gdriveProvider;
       if (!testProvider) throw new Error('Google Drive configuration is missing');
@@ -176,6 +182,14 @@ export class StorageManager {
       } else if (mergedConfig.connected_email === null || mergedConfig.connected_email === '') {
         delete mergedConfig.connected_email;
       }
+
+      if (mergedConfig.client_secret && (mergedConfig.client_secret.endsWith('.apps.googleusercontent.com') || (mergedConfig.client_id && mergedConfig.client_secret === mergedConfig.client_id))) {
+        throw new Error('Invalid Client Secret: You provided a Client ID instead of a Client Secret. Client secrets in Google Cloud usually begin with "GOCSPX-".');
+      }
+      if (mergedConfig.refresh_token && mergedConfig.refresh_token.startsWith('GOCSPX-')) {
+        throw new Error('Invalid Refresh Token: You entered a Client Secret instead of a Refresh Token. Refresh tokens usually begin with "1//". Use "1-Click Browser Login" or Google OAuth Playground to generate one.');
+      }
+
       this.gdriveProvider = new GoogleDriveStorageProvider(mergedConfig);
     }
 

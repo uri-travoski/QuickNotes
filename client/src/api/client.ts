@@ -481,6 +481,19 @@ export async function getGoogleDriveAuthUrl(clientId?: string, clientSecret?: st
   return res.json();
 }
 
+export async function createGoogleDriveFolder(name?: string): Promise<{ success: boolean; folderId: string; folderName: string; message: string }> {
+  const res = await fetch(`${API_BASE}/storage/gdrive/create-folder`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    body: JSON.stringify({ name: name || 'QuickNotes' }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Failed to create Google Drive folder');
+  }
+  return res.json();
+}
+
 export async function disconnectGoogleDrive(): Promise<{ message: string }> {
   const res = await fetch(`${API_BASE}/storage/gdrive/oauth/disconnect`, {
     method: 'POST',

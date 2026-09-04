@@ -221,24 +221,23 @@ router.get('/gdrive/oauth/url', async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
     const effectiveRedirectUri = (redirect_uri as string) || `${protocol}://${host}/api/storage/gdrive/oauth/callback`;
 
-    const scope = encodeURIComponent(
-      'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email'
-    );
-
-    // Generate OAuth 2.0 State with encoded redirectUri and client credentials
+    // Generate compact OAuth 2.0 State with redirectUri and random nonce
     const statePayload = {
-      rnd: crypto.randomBytes(16).toString('hex'),
+      rnd: crypto.randomBytes(8).toString('hex'),
       redirectUri: effectiveRedirectUri,
-      clientId: effectiveClientId,
-      clientSecret: effectiveClientSecret,
     };
     const state = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-      effectiveClientId
-    )}&redirect_uri=${encodeURIComponent(
-      effectiveRedirectUri
-    )}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${encodeURIComponent(state)}`;
+    const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    googleAuthUrl.searchParams.set('client_id', effectiveClientId.trim());
+    googleAuthUrl.searchParams.set('redirect_uri', effectiveRedirectUri.trim());
+    googleAuthUrl.searchParams.set('response_type', 'code');
+    googleAuthUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email');
+    googleAuthUrl.searchParams.set('access_type', 'offline');
+    googleAuthUrl.searchParams.set('prompt', 'consent');
+    googleAuthUrl.searchParams.set('state', state);
+
+    const authUrl = googleAuthUrl.toString();
 
     res.json({
       url: authUrl,
@@ -285,6 +284,39 @@ router.post('/gdrive/oauth/disconnect', async (req, res) => {
     res.json({ message: 'Google Drive account disconnected successfully' });
   } catch (error: any) {
     console.error('Error disconnecting Google Drive:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/storage/gdrive/create-folder - Create dedicated folder in Google Drive
+router.post('/gdrive/create-folder', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const folderName = name?.trim() || 'QuickNotes';
+
+    const provider = storageManager.getProvider('gdrive') as GoogleDriveStorageProvider;
+    if (!provider) {
+      return res.status(400).json({ error: 'Google Drive provider is not initialized' });
+    }
+
+    const folder = await provider.createFolder(folderName);
+
+    // Save newly created folder ID to storage_configs
+    const storedConfigRes = await query('SELECT config_json FROM storage_configs WHERE id = $1', ['gdrive']);
+    const prevConfig = storedConfigRes.rows[0]?.config_json || {};
+    await storageManager.saveConfig('gdrive', {
+      ...prevConfig,
+      folder_id: folder.id,
+    }, false);
+
+    res.json({
+      success: true,
+      folderId: folder.id,
+      folderName: folder.name,
+      message: `Folder "${folder.name}" created successfully in Google Drive`,
+    });
+  } catch (error: any) {
+    console.error('Error creating Google Drive folder:', error);
     res.status(500).json({ error: error.message });
   }
 });

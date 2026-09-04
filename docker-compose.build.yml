@@ -38,6 +38,8 @@ services:
       DEFAULT_OWNER_PASSWORD: ${DEFAULT_OWNER_PASSWORD:-quicknotes_owner_password_2026}
       DEFAULT_API_USERNAME: ${DEFAULT_API_USERNAME:-api_user}
       DEFAULT_API_PASSWORD: ${DEFAULT_API_PASSWORD:-quicknotes_api_password_2026}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     volumes:
       - quicknotes_uploads:/app/uploads
       - quicknotes_backups:/app/backups

@@ -220,6 +220,13 @@ export class GoogleDriveStorageProvider implements StorageProvider {
       }
 
       if (this.refreshToken && this.clientId && this.clientSecret) {
+        if (this.clientSecret.endsWith('.apps.googleusercontent.com') || this.clientSecret.trim() === this.clientId.trim()) {
+          throw new Error('Invalid Client Secret: A Google Client ID (.apps.googleusercontent.com) was provided as the Client Secret. Google OAuth Client Secrets typically start with "GOCSPX-".');
+        }
+        if (this.refreshToken.startsWith('GOCSPX-')) {
+          throw new Error('Invalid Refresh Token: A Client Secret (starting with "GOCSPX-") was provided as the Refresh Token. A Google OAuth refresh token typically starts with "1//". Please click "1-Click Browser Login" or use Google OAuth Playground to generate one.');
+        }
+
         try {
           const postData = new URLSearchParams({
             client_id: this.clientId.trim(),
@@ -474,6 +481,28 @@ export class GoogleDriveStorageProvider implements StorageProvider {
     const data = JSON.parse(res.body.toString('utf8'));
     this.fileIdCache.set(filename, data.id);
     return data.id;
+  }
+
+  async createFolder(folderName: string = 'QuickNotes'): Promise<{ id: string; name: string }> {
+    const token = await this.getAccessToken();
+    const url = 'https://www.googleapis.com/drive/v3/files?fields=id,name,mimeType&supportsAllDrives=true';
+    const body = JSON.stringify({
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+    });
+
+    const res = await this.httpRequest('POST', url, Buffer.from(body), {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    if (res.statusCode !== 200 && res.statusCode !== 201) {
+      throw new Error(`Failed to create Google Drive folder (${res.statusCode}): ${res.body.toString('utf8')}`);
+    }
+
+    const data = JSON.parse(res.body.toString('utf8'));
+    this.folderId = data.id;
+    return { id: data.id, name: data.name };
   }
 
   async downloadFile(filename: string, prefix?: string): Promise<Buffer> {
