@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { query } from '../db/index.js';
-import { requireLabelAccess } from '../services/auth.js';
+import { requireLabelAccess, requireNotApiForLabelDelete } from '../services/auth.js';
 
 const router = Router();
 router.use(requireLabelAccess);
@@ -165,8 +165,8 @@ router.put('/:id', requireLabelAccess, async (req, res) => {
   }
 });
 
-// DELETE /api/tags/:id - Delete tag
-router.delete('/:id', requireLabelAccess, async (req, res) => {
+// DELETE /api/tags/:id - Delete tag (FORBIDDEN for API users - Owner only)
+router.delete('/:id', requireNotApiForLabelDelete, async (req, res) => {
   const { id } = req.params;
   try {
     const result = await query('DELETE FROM tags WHERE id = $1 RETURNING *', [id]);

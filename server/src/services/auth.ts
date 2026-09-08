@@ -173,7 +173,7 @@ export function requireNotApiForDelete(req: Request, res: Response, next: NextFu
   next();
 }
 
-// Allow Label management for both Owner and API roles
+// Allow Label management (list/create/update) for both Owner and API roles
 export function requireLabelAccess(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -181,6 +181,16 @@ export function requireLabelAccess(req: Request, res: Response, next: NextFuncti
   // Both 'owner' and 'api' are allowed
   if (req.user.role !== 'owner' && req.user.role !== 'api') {
     return res.status(403).json({ error: 'Forbidden: Insufficient permissions for label management' });
+  }
+  next();
+}
+
+// Block API users from deleting labels (Owner only)
+export function requireNotApiForLabelDelete(req: Request, res: Response, next: NextFunction) {
+  if (req.user && req.user.role === 'api') {
+    return res.status(403).json({
+      error: 'Forbidden: API users are not permitted to delete labels',
+    });
   }
   next();
 }

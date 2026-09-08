@@ -142,7 +142,7 @@ const OPENAPI_SPEC = {
     },
     '/tags/{id}': {
       put: { summary: 'Update label name, color, or parent' },
-      delete: { summary: 'Delete label' },
+      delete: { summary: 'Delete label (Owner only - API users forbidden)' },
     },
     '/attachments/note/{note_id}': {
       post: { summary: 'Upload image or file attachment to note' },
