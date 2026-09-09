@@ -209,6 +209,16 @@ async function testRbacParity() {
   const ownerEmptyTrash = await call(ownerH, 'POST', '/notes/empty-trash');
   assert(ownerEmptyTrash.status === 200, 'Owner: empty trash', ownerEmptyTrash.status);
 
+  // Bulk delete (Owner-only privilege exposed to API keys)
+  const b1 = await call(ownerH, 'POST', '/notes', { title: `RBAC bulk1 ${suffix}` });
+  const b2 = await call(ownerH, 'POST', '/notes', { title: `RBAC bulk2 ${suffix}` });
+  const apiBulk = await call(apiH, 'POST', '/notes/bulk-delete', { ids: [b1.data.id, b2.data.id] });
+  assert(apiBulk.status === 403, 'API user: bulk-delete notes BLOCKED', apiBulk.status);
+  const ownerBulk = await call(ownerH, 'POST', '/notes/bulk-delete', { ids: [b1.data.id, b2.data.id] });
+  assert(ownerBulk.status === 200 && ownerBulk.data.deletedCount === 2, 'Owner: bulk-delete notes', ownerBulk.status);
+  const ownerBulkBad = await call(ownerH, 'POST', '/notes/bulk-delete', { ids: 'not-an-array' });
+  assert(ownerBulkBad.status === 400, 'Owner: bulk-delete validates payload', ownerBulkBad.status);
+
   console.log('\n--- Suite 4: Labels - list/create/update parity, delete restricted ---');
   let labelId: string | null = null;
   for (const [name, h] of [['Owner', ownerH], ['API user', apiH]] as const) {

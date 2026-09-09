@@ -567,49 +567,77 @@ router.post('/:id/duplicate', async (req, res) => {
   }
 });
 
+// Shared helper: permanently delete one note + its attachment files (local & cloud)
+async function permanentlyDeleteNote(id: string): Promise<any | null> {
+  // Find attachments to clean up from local disk and cloud storage (Google Drive, S3, R2, B2)
+  const attResult = await query('SELECT filename, thumbnail_filename, storage_provider FROM attachments WHERE note_id = $1', [id]);
+  for (const att of attResult.rows) {
+    // 1. Local disk cleanup
+    const filePath = path.join(UPLOAD_DIR, att.filename);
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath); } catch (e) {}
+    }
+    if (att.thumbnail_filename) {
+      const thumbPath = path.join(THUMBNAIL_DIR, att.thumbnail_filename);
+      if (fs.existsSync(thumbPath)) {
+        try { fs.unlinkSync(thumbPath); } catch (e) {}
+      }
+    }
+    // 2. Cloud storage cleanup (Google Drive / S3 / R2 / B2)
+    if (att.storage_provider && att.storage_provider !== 'local') {
+      try {
+        await storageManager.delete(att.filename, att.storage_provider, 'attachments');
+      } catch (cloudErr) {
+        console.warn(`Failed to delete attachment ${att.filename} from ${att.storage_provider}:`, cloudErr);
+      }
+    }
+    const activeType = storageManager.getActiveType();
+    if (activeType !== 'local' && activeType !== att.storage_provider) {
+      try {
+        await storageManager.delete(att.filename, activeType, 'attachments');
+      } catch (cloudErr) {}
+    }
+  }
+
+  const result = await query('DELETE FROM notes WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0] || null;
+}
+
 // DELETE /api/notes/:id - Permanently delete note (FORBIDDEN for API users)
 router.delete('/:id', requireNotApiForDelete, async (req, res) => {
   const { id } = req.params;
   try {
-    // Find attachments to clean up from local disk and cloud storage (Google Drive, S3, R2, B2)
-    const attResult = await query('SELECT filename, thumbnail_filename, storage_provider FROM attachments WHERE note_id = $1', [id]);
-    for (const att of attResult.rows) {
-      // 1. Local disk cleanup
-      const filePath = path.join(UPLOAD_DIR, att.filename);
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch (e) {}
-      }
-      if (att.thumbnail_filename) {
-        const thumbPath = path.join(THUMBNAIL_DIR, att.thumbnail_filename);
-        if (fs.existsSync(thumbPath)) {
-          try { fs.unlinkSync(thumbPath); } catch (e) {}
-        }
-      }
-      // 2. Cloud storage cleanup (Google Drive / S3 / R2 / B2)
-      if (att.storage_provider && att.storage_provider !== 'local') {
-        try {
-          await storageManager.delete(att.filename, att.storage_provider, 'attachments');
-        } catch (cloudErr) {
-          console.warn(`Failed to delete attachment ${att.filename} from ${att.storage_provider}:`, cloudErr);
-        }
-      }
-      const activeType = storageManager.getActiveType();
-      if (activeType !== 'local' && activeType !== att.storage_provider) {
-        try {
-          await storageManager.delete(att.filename, activeType, 'attachments');
-        } catch (cloudErr) {}
-      }
-    }
-
-    const result = await query('DELETE FROM notes WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
+    const note = await permanentlyDeleteNote(String(id));
+    if (!note) {
       return res.status(404).json({ error: 'Note not found' });
     }
-
-    res.json({ message: 'Note permanently deleted', note: result.rows[0] });
+    res.json({ message: 'Note permanently deleted', note });
   } catch (error: any) {
     console.error('Error deleting note:', error);
     res.status(500).json({ error: 'Failed to delete note', details: error.message });
+  }
+});
+
+// POST /api/notes/bulk-delete - Permanently delete many notes at once (Owner only; FORBIDDEN for API users)
+router.post('/bulk-delete', requireNotApiForDelete, async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0 || !ids.every((i: any) => typeof i === 'string')) {
+    return res.status(400).json({ error: 'Body must be { ids: string[] } with at least one note ID' });
+  }
+  if (ids.length > 500) {
+    return res.status(400).json({ error: 'A maximum of 500 notes can be deleted per request' });
+  }
+  try {
+    let deleted = 0;
+    const missing: string[] = [];
+    for (const id of ids as string[]) {
+      if (await permanentlyDeleteNote(id)) deleted++;
+      else missing.push(id);
+    }
+    res.json({ message: `Deleted ${deleted} note(s)`, deletedCount: deleted, notFound: missing });
+  } catch (error: any) {
+    console.error('Error bulk deleting notes:', error);
+    res.status(500).json({ error: 'Failed to bulk delete notes', details: error.message });
   }
 });
 

@@ -7,7 +7,7 @@ const OPENAPI_SPEC = {
   openapi: '3.1.0',
   info: {
     title: 'QuickNotes API (2026)',
-    version: '1.1.3',
+    version: '1.1.4',
     description: 'RESTful API for QuickNotes App. Supports full note lifecycle, image thumbnails, attachments (images / video / any file), 2-step nested labels, and AI agent tool calling. Base path is /api (there is NO /v1 prefix).',
   },
   servers: [{ url: '/api', description: 'QuickNotes API Server' }],
@@ -145,6 +145,12 @@ const OPENAPI_SPEC = {
         description: 'Partial update: title, content, color, is_starred, is_archived, checklist_items (full replacement array), tag_ids (full replacement array). API users may set is_trashed=false (restore) but NOT is_trashed=true (trashing is Owner-only).',
       },
       delete: { summary: 'Permanently delete note (Owner only - API users get 403)' },
+    },
+    '/notes/bulk-delete': {
+      post: {
+        summary: 'Permanently delete many notes at once (Owner only - API users get 403)',
+        description: 'Body: {"ids": ["note-uuid", ...]} — up to 500 per request. Returns { deletedCount, notFound }. Owner API keys may use this; API-user keys get 403.',
+      },
     },
     '/notes/{id}/star': {
       patch: { summary: 'Toggle note star status' },
