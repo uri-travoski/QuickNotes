@@ -369,7 +369,11 @@ export async function deleteAttachment(id: string): Promise<{ message: string }>
 }
 
 export function getAttachmentDownloadUrl(id: string): string {
-  return `${API_BASE}/attachments/${id}/download`;
+  // Plain <a href> navigation cannot send the Authorization header, so the
+  // JWT is passed as ?token= (the server's authenticateToken accepts it).
+  const token = localStorage.getItem('quicknotes_auth_token') || localStorage.getItem('saved_auth_token');
+  const qs = token ? `?token=${encodeURIComponent(token)}` : '';
+  return `${API_BASE}/attachments/${id}/download${qs}`;
 }
 
 export function getFileUrl(filename: string): string {

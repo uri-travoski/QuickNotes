@@ -7,7 +7,7 @@ const OPENAPI_SPEC = {
   openapi: '3.1.0',
   info: {
     title: 'QuickNotes API (2026)',
-    version: '1.1.2',
+    version: '1.1.3',
     description: 'RESTful API for QuickNotes App. Supports full note lifecycle, image thumbnails, attachments (images / video / any file), 2-step nested labels, and AI agent tool calling. Base path is /api (there is NO /v1 prefix).',
   },
   servers: [{ url: '/api', description: 'QuickNotes API Server' }],
@@ -178,7 +178,7 @@ const OPENAPI_SPEC = {
     '/attachments/upload': {
       post: {
         summary: 'Upload attachment(s) — image, video, or any file',
-        description: `multipart/form-data (NOT JSON). Field name MUST be "files" (up to 10 files per request, max size = MAX_FILE_SIZE_MB env, default 100MB). Optional text field "note_id" links the upload to an existing note. Video thumbnails are auto-generated (ffmpeg). Example:
+        description: `multipart/form-data (NOT JSON). Field name MUST be "files" (up to 10 files per request, max size = MAX_FILE_SIZE_MB env, default 100MB). Optional text field "note_id" links the upload to an existing note. Video thumbnails are auto-generated (ffmpeg). Set the part Content-Type to the real mime type (e.g. ";type=video/mp4"); if it is application/octet-stream the server infers the type from the file extension. Example:
 curl -X POST <base>/api/attachments/upload \\
   -H "X-API-Key: sk_qn_..." \\
   -F "files=@/path/to/video.mp4" \\

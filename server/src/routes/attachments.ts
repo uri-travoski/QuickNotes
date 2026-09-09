@@ -41,6 +41,23 @@ const upload = multer({
   },
 });
 
+// Some clients/agents send application/octet-stream; infer a useful type
+// from the file extension so images/videos get thumbnails and media UI.
+const EXTENSION_MIME: Record<string, string> = {
+  '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.m4v': 'video/mp4',
+  '.webm': 'video/webm', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif',
+  '.webp': 'image/webp', '.svg': 'image/svg+xml', '.heic': 'image/heic', '.bmp': 'image/bmp',
+  '.pdf': 'application/pdf', '.txt': 'text/plain', '.md': 'text/markdown',
+  '.csv': 'text/csv', '.json': 'application/json', '.zip': 'application/zip',
+  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg',
+};
+
+export function resolveMimeType(originalName: string, providedMime: string | undefined | null): string {
+  if (providedMime && providedMime !== 'application/octet-stream') return providedMime;
+  return EXTENSION_MIME[path.extname(originalName).toLowerCase()] || providedMime || 'application/octet-stream';
+}
+
 // POST /api/attachments/upload - Upload file(s) for a note or draft
 router.post('/upload', upload.array('files', 10), async (req, res) => {
   try {
@@ -57,7 +74,7 @@ router.post('/upload', upload.array('files', 10), async (req, res) => {
       const filePath = file.path;
       const filename = file.filename;
       const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-      const mimeType = file.mimetype;
+      const mimeType = resolveMimeType(originalName, file.mimetype);
       const fileSize = file.size;
 
       // Process image thumbnail if applicable
@@ -123,7 +140,7 @@ router.post('/note/:note_id', upload.array('files', 10), async (req, res) => {
       const filePath = file.path;
       const filename = file.filename;
       const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-      const mimeType = file.mimetype;
+      const mimeType = resolveMimeType(originalName, file.mimetype);
       const fileSize = file.size;
 
       const thumbResult = await processAttachment(filePath, filename, mimeType, UPLOAD_DIR);

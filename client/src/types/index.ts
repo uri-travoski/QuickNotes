@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v1.1.2';
+export const APP_VERSION = 'v1.1.3';
 
 export type NoteColor =
   | 'default'
