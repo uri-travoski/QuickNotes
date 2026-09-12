@@ -7,7 +7,7 @@ const OPENAPI_SPEC = {
   openapi: '3.1.0',
   info: {
     title: 'QuickNotes REST API',
-    version: '1.1.5',
+    version: '1.1.6',
     description: 'RESTful API for QuickNotes App. Supports full note lifecycle, image thumbnails, attachments (images / video / any file), 2-step nested labels, and AI agent tool calling. Base path is /api (there is NO /v1 prefix).',
   },
   servers: [{ url: '/api', description: 'QuickNotes API Server' }],

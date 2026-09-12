@@ -281,7 +281,7 @@ export const BackupSettings: React.FC = () => {
 
         {/* Scope: Database Only vs Full Backup */}
         <div className="space-y-2 pt-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
             Archive Scope
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -335,7 +335,7 @@ export const BackupSettings: React.FC = () => {
 
         {/* Destination Storage Provider */}
         <div className="space-y-2 pt-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
             Storage Destination
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -400,7 +400,7 @@ export const BackupSettings: React.FC = () => {
             type="button"
             disabled={isBackingUp}
             onClick={handleCreateBackup}
-            className="h-8.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-2 cursor-pointer self-stretch sm:self-auto justify-center disabled:opacity-60"
+            className="h-9 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-2 cursor-pointer self-stretch sm:self-auto justify-center disabled:opacity-60"
           >
             {isBackingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
             <span>{isBackingUp ? 'Generating Snapshot...' : 'Run Backup Now'}</span>
@@ -426,7 +426,7 @@ export const BackupSettings: React.FC = () => {
           </div>
 
           <label className="relative inline-flex items-center cursor-pointer gap-2">
-            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
               {scheduleEnabled ? 'Active' : 'Disabled'}
             </span>
             <input
@@ -543,7 +543,7 @@ export const BackupSettings: React.FC = () => {
             type="button"
             disabled={isSavingSchedule}
             onClick={handleSaveSchedule}
-            className="h-8.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+            className="h-9 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
           >
             {isSavingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             <span>Save Schedule</span>
@@ -577,7 +577,7 @@ export const BackupSettings: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
-            className="h-8.5 px-3.5 bg-white dark:bg-[#28292c] hover:bg-gray-50 dark:hover:bg-[#323438] border border-gray-200 dark:border-[#3c4043] text-gray-800 dark:text-gray-200 rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-60"
+            className="h-9 px-4 bg-white dark:bg-[#28292c] hover:bg-gray-50 dark:hover:bg-[#323438] border border-gray-200 dark:border-[#3c4043] text-gray-800 dark:text-gray-200 rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-60"
           >
             {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5 text-blue-500" />}
             <span>{isUploading ? 'Restoring Archive...' : 'Upload & Restore (.zip)'}</span>
@@ -603,7 +603,7 @@ export const BackupSettings: React.FC = () => {
             disabled={isRefreshing}
             onClick={handleRefreshStorage}
             title="Scan physical storage and re-verify archives"
-            className="h-7 px-2.5 rounded-md bg-gray-100 hover:bg-gray-200/80 dark:bg-[#28292c] dark:hover:bg-[#323438] text-gray-600 dark:text-gray-300 text-[11px] font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+            className="h-8 px-3 rounded-lg bg-gray-100 hover:bg-gray-200/80 dark:bg-[#28292c] dark:hover:bg-[#323438] text-gray-600 dark:text-gray-300 text-[11px] font-medium transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-amber-500' : ''}`} />
             <span>Verify Storage</span>
@@ -618,7 +618,7 @@ export const BackupSettings: React.FC = () => {
         ) : backups.length === 0 ? (
           <div className="p-8 text-center border border-dashed border-gray-200 dark:border-[#3c4043] rounded-xl bg-gray-50/50 dark:bg-[#1f2023]/40 space-y-2">
             <Archive className="w-8 h-8 text-gray-400 mx-auto" />
-            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
               No backups currently found on physical storage
             </p>
             <p className="text-[11px] text-gray-400 dark:text-gray-500 max-w-sm mx-auto">
@@ -629,7 +629,7 @@ export const BackupSettings: React.FC = () => {
           <div className="bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="min-w-[680px] w-full text-left text-xs">
-                <thead className="bg-gray-50/70 dark:bg-[#1f2023] border-b border-gray-200/80 dark:border-[#3c4043] text-gray-500 dark:text-gray-400 font-medium text-[11px]">
+                <thead className="bg-gray-50/70 dark:bg-[#1f2023] border-b border-gray-200/80 dark:border-[#3c4043] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="px-4 py-3">Archive File</th>
                     <th className="px-4 py-3">Type</th>

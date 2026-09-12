@@ -95,7 +95,7 @@ export const ApiSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#3c4043]">
         <div>
@@ -112,7 +112,7 @@ export const ApiSettings: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowCreateCard(!showCreateCard)}
-            className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-center whitespace-nowrap"
+            className="h-9 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-center whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{showCreateCard ? 'Close Form' : 'Generate API Key'}</span>
@@ -196,7 +196,7 @@ export const ApiSettings: React.FC = () => {
             <button
               type="button"
               onClick={() => copyToClipboard(revealedKey)}
-              className="h-9 px-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-lg font-medium text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-lg font-medium text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
               {copiedKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
@@ -243,7 +243,7 @@ export const ApiSettings: React.FC = () => {
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
                 placeholder="e.g. Antigravity Agent, Claude Desktop, CLI Sync"
-                className="w-full h-9 px-3 bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="w-full h-9 px-3 bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
               />
             </div>
 
@@ -258,7 +258,7 @@ export const ApiSettings: React.FC = () => {
               <button
                 type="submit"
                 disabled={isGenerating || !newKeyName.trim()}
-                className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                className="h-9 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>{isGenerating ? 'Generating...' : 'Create Key'}</span>

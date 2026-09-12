@@ -128,7 +128,7 @@ export const UserSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#3c4043]">
         <div>
@@ -147,7 +147,7 @@ export const UserSettings: React.FC = () => {
             setShowCreateCard(!showCreateCard);
             setPasswordTargetUser(null);
           }}
-          className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-center whitespace-nowrap"
+          className="h-9 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-center whitespace-nowrap"
         >
           <UserPlus className="w-3.5 h-3.5" />
           <span>{showCreateCard ? 'Close Form' : 'New User'}</span>
@@ -185,7 +185,7 @@ export const UserSettings: React.FC = () => {
                   placeholder="e.g. jdoe"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
@@ -199,7 +199,7 @@ export const UserSettings: React.FC = () => {
                   placeholder="••••••••••••"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
@@ -212,7 +212,7 @@ export const UserSettings: React.FC = () => {
                   placeholder="e.g. John Doe"
                   value={newDisplayName}
                   onChange={(e) => setNewDisplayName(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
@@ -223,7 +223,7 @@ export const UserSettings: React.FC = () => {
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as 'owner' | 'api')}
-                  className="w-full h-9 px-3 rounded-lg bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
                 >
                   <option value="api">API User (REST / Automations only)</option>
                   <option value="owner">Owner (Full UI + Admin Permissions)</option>
@@ -242,7 +242,7 @@ export const UserSettings: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmittingCreate}
-                className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                className="h-9 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>{isSubmittingCreate ? 'Creating...' : 'Save User'}</span>
@@ -283,7 +283,7 @@ export const UserSettings: React.FC = () => {
                 placeholder="••••••••••••"
                 value={newPasswordValue}
                 onChange={(e) => setNewPasswordValue(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 text-xs focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
               />
             </div>
 
@@ -298,7 +298,7 @@ export const UserSettings: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmittingPassword}
-                className="h-8.5 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
               >
                 <Lock className="w-3.5 h-3.5" />
                 <span>{isSubmittingPassword ? 'Updating...' : 'Update Password'}</span>

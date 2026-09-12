@@ -164,7 +164,7 @@ export const LabelSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="pb-4 border-b border-gray-100 dark:border-[#3c4043]">
         <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -224,7 +224,7 @@ export const LabelSettings: React.FC = () => {
           <button
             type="submit"
             disabled={isCreatingRoot || !newRootName.trim()}
-            className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
+            className="h-9 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{isCreatingRoot ? 'Adding...' : 'Add Category'}</span>

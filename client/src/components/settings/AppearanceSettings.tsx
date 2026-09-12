@@ -95,7 +95,7 @@ export const AppearanceSettings: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="pb-4 border-b border-gray-100 dark:border-[#3c4043]">
         <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
