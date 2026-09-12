@@ -1,7 +1,7 @@
 {
   "name": "quicknotes-server",
   "private": true,
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "QuickNotes Backend API - Node.js 26 & PostgreSQL 18",
   "main": "dist/index.js",
   "type": "module",

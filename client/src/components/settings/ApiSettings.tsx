@@ -11,6 +11,8 @@ import {
   Terminal,
   Cpu,
   X,
+  AlertTriangle,
+  Clock,
 } from 'lucide-react';
 import { ApiKey } from '../../types';
 import * as api from '../../api/client';
@@ -22,9 +24,10 @@ export const ApiSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<'keys' | 'docs' | 'ai_tools'>('keys');
 
-  // New key modal & reveal modal
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  // Inline forms (replaces modal-in-modal anti-patterns)
+  const [showCreateCard, setShowCreateCard] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
 
@@ -53,13 +56,16 @@ export const ApiSettings: React.FC = () => {
     if (!newKeyName.trim()) return;
 
     try {
+      setIsGenerating(true);
       const created = await api.createApiKey(newKeyName.trim());
       setRevealedKey(created.apiKey || null);
-      setShowCreateModal(false);
+      setShowCreateCard(false);
       setNewKeyName('');
       loadKeys();
     } catch (err: any) {
       showToast(err.message || 'Failed to generate API key');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -85,7 +91,7 @@ export const ApiSettings: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopiedKey(true);
     showToast('Copied to clipboard');
-    setTimeout(() => setCopiedKey(false), 3000);
+    setTimeout(() => setCopiedKey(false), 2500);
   };
 
   return (
@@ -93,36 +99,36 @@ export const ApiSettings: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#3c4043]">
         <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <Key className="w-5 h-5 text-amber-500" />
+          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Key className="w-4.5 h-4.5 text-amber-500" />
             REST API & AI Integrations
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Manage API keys, inspect OpenAPI 3.1 endpoints, and export agent tool calling schemas.
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Manage agent API keys, inspect OpenAPI 3.1 endpoints, and export function schemas.
           </p>
         </div>
 
-        {isOwner && (
+        {isOwner && activeSubTab === 'keys' && (
           <button
             type="button"
-            onClick={() => setShowCreateModal(true)}
-            className="h-10 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-center whitespace-nowrap"
+            onClick={() => setShowCreateCard(!showCreateCard)}
+            className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-center whitespace-nowrap"
           >
-            <Plus className="w-4 h-4" />
-            <span>Generate API Key</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>{showCreateCard ? 'Close Form' : 'Generate API Key'}</span>
           </button>
         )}
       </div>
 
-      {/* Sub-Navigation Tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-[6px] bg-gray-100/80 dark:bg-[#1a1b1e] border border-gray-200/60 dark:border-[#3c4043] w-fit">
+      {/* Sub-Navigation Pill Switcher */}
+      <div className="inline-flex items-center gap-1 p-1 bg-gray-100/90 dark:bg-[#1a1b1e] rounded-lg border border-gray-200/80 dark:border-[#3c4043]">
         <button
           type="button"
           onClick={() => setActiveSubTab('keys')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
             activeSubTab === 'keys'
-              ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs font-semibold'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
           <Key className="w-3.5 h-3.5" />
@@ -132,10 +138,10 @@ export const ApiSettings: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveSubTab('docs')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
             activeSubTab === 'docs'
-              ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs font-semibold'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
@@ -145,10 +151,10 @@ export const ApiSettings: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveSubTab('ai_tools')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
             activeSubTab === 'ai_tools'
-              ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs font-semibold'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
@@ -156,69 +162,177 @@ export const ApiSettings: React.FC = () => {
         </button>
       </div>
 
+      {/* Revealed Key Banner Card */}
+      {revealedKey && (
+        <div className="p-4.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 space-y-3 shadow-xs animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 font-bold text-xs">
+              <Check className="w-4 h-4 text-emerald-600" />
+              <span>New API Key Generated Successfully</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRevealedKey(null)}
+              className="p-1 rounded-md text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-100/60 dark:bg-emerald-900/40 text-[11px] text-emerald-900 dark:text-emerald-200">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-amber-600 mt-0.5" />
+            <span>
+              Save this key immediately. For security, you will not be able to view this full key again once dismissed.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={revealedKey}
+              className="flex-1 h-9 px-3 bg-white dark:bg-[#1a1b1e] border border-emerald-200 dark:border-emerald-800/70 rounded-lg font-mono text-xs text-gray-900 dark:text-gray-100 select-all focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => copyToClipboard(revealedKey)}
+              className="h-9 px-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-lg font-medium text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            >
+              {copiedKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRevealedKey(null)}
+              className="h-9 px-3 rounded-lg border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#252629] hover:bg-gray-50 text-gray-700 dark:text-gray-300 text-xs font-medium transition-all cursor-pointer whitespace-nowrap"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Inline Key Generation Form */}
+      {showCreateCard && (
+        <div className="p-5 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/40 dark:bg-amber-950/20 space-y-4 shadow-xs animate-fade-in">
+          <div className="flex items-center justify-between border-b border-amber-200/70 dark:border-amber-900/60 pb-3">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <h3 className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                Generate New API Key
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowCreateCard(false)}
+              className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <form onSubmit={handleCreateKey} className="space-y-3.5 text-xs">
+            <div className="max-w-md space-y-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                Key Name / Description *
+              </label>
+              <input
+                type="text"
+                required
+                autoFocus
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+                placeholder="e.g. Antigravity Agent, Claude Desktop, CLI Sync"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-200/60 dark:border-amber-900/60">
+              <button
+                type="button"
+                onClick={() => setShowCreateCard(false)}
+                className="h-8 px-3 rounded-lg border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#252629] hover:bg-gray-50 text-gray-700 dark:text-gray-300 text-xs font-medium transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isGenerating || !newKeyName.trim()}
+                className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isGenerating ? 'Generating...' : 'Create Key'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Tab 1: API Keys List */}
       {activeSubTab === 'keys' && (
         <div className="space-y-4">
           {!isOwner ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-gray-500 rounded-xl border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#252629]">
               <Shield className="w-8 h-8 text-amber-500 mx-auto mb-2" />
               <p className="text-xs">Only the Owner user can generate and revoke API keys.</p>
             </div>
           ) : loading ? (
             <div className="py-8 text-center text-gray-400 text-xs font-medium animate-pulse">Loading keys...</div>
           ) : apiKeys.length === 0 ? (
-            <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-[#3c4043] rounded-[6px]">
+            <div className="p-10 text-center border-2 border-dashed border-gray-200 dark:border-[#3c4043] rounded-xl">
               <Bot className="w-8 h-8 text-gray-400 mx-auto mb-2" />
               <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-xs">No API Keys Generated</h3>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Generate an API key to allow external AI agents or automation scripts to interact with your QuickNotes notes.
+              <p className="text-[11px] text-gray-400 mt-1 max-w-sm mx-auto">
+                Generate an API key to allow external AI agents or automated scripts to interact with your QuickNotes workspace.
               </p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#28292c] rounded-[6px] border border-gray-200 dark:border-[#3c4043] shadow-xs overflow-hidden">
-              {/* Horizontally scrollable container with generous column spacing */}
-              <div className="overflow-x-auto max-w-full">
-                <table className="min-w-[820px] w-full text-left text-xs border-collapse">
-                  <thead className="bg-gray-50/90 dark:bg-[#202124] border-b border-gray-200 dark:border-[#3c4043] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider text-[11px]">
+            <div className="bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] shadow-xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-gray-50/80 dark:bg-[#1f2023] border-b border-gray-200/80 dark:border-[#3c4043] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="w-[240px] min-w-[220px] px-6 py-3.5">Key Name / Description</th>
-                      <th className="w-[200px] min-w-[180px] px-6 py-3.5">API Key Prefix</th>
-                      <th className="w-[150px] min-w-[130px] px-6 py-3.5">Assigned User</th>
-                      <th className="w-[180px] min-w-[160px] px-6 py-3.5">Last Accessed</th>
-                      <th className="w-[90px] min-w-[80px] px-6 py-3.5 text-right">Actions</th>
+                      <th className="px-5 py-3">Key Name</th>
+                      <th className="px-5 py-3">Prefix</th>
+                      <th className="px-5 py-3">User</th>
+                      <th className="px-5 py-3">Last Used</th>
+                      <th className="px-5 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-[#3c4043]">
                     {apiKeys.map((k) => (
-                      <tr key={k.id} className="hover:bg-gray-50/70 dark:hover:bg-white/[0.03] transition-colors">
-                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      <tr key={k.id} className="hover:bg-gray-50/70 dark:hover:bg-white/[0.02] transition-colors">
+                        <td className="px-5 py-3.5 font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <Key className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                             <span>{k.name}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 rounded-[6px] bg-gray-100 dark:bg-[#1a1b1e] border border-gray-200/80 dark:border-[#3c4043] text-[11px] font-semibold">
+                        <td className="px-5 py-3.5 font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-gray-100 dark:bg-[#1a1b1e] border border-gray-200/80 dark:border-[#3c4043] text-[11px] font-semibold">
                             {k.key_prefix}••••••••
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[6px] bg-gray-100 dark:bg-[#1a1b1e] text-[11px] font-medium text-gray-700 dark:text-gray-300">
+                        <td className="px-5 py-3.5 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-[#1a1b1e] text-[11px] font-medium text-gray-700 dark:text-gray-300">
                             <Bot className="w-3 h-3 text-blue-500 flex-shrink-0" />
                             <span>{k.username || 'System'}</span>
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-[11px] font-mono whitespace-nowrap">
-                          {k.last_used_at ? new Date(k.last_used_at).toLocaleString() : 'Never'}
+                        <td className="px-5 py-3.5 text-gray-500 dark:text-gray-400 text-[11px] font-mono whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3 h-3 text-gray-400" />
+                            <span>{k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : 'Never'}</span>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <td className="px-5 py-3.5 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => handleRevokeKey(k.id)}
                             title="Revoke API key"
-                            className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors inline-flex items-center justify-center cursor-pointer"
+                            className="w-7 h-7 rounded-lg border border-gray-200 dark:border-[#3c4043] hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 text-gray-400 hover:text-red-500 transition-colors inline-flex items-center justify-center cursor-pointer"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
                       </tr>
@@ -234,74 +348,83 @@ export const ApiSettings: React.FC = () => {
       {/* Tab 2: OpenAPI 3.1 Endpoints */}
       {activeSubTab === 'docs' && (
         <div className="space-y-4">
-          <div className="bg-amber-50/70 dark:bg-amber-950/30 p-4 rounded-[6px] border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">
-            <Terminal className="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" />
+          <div className="bg-amber-50/70 dark:bg-amber-950/30 p-4 rounded-xl border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">
+            <Terminal className="w-4 h-4 flex-shrink-0 text-amber-600 mt-0.5" />
             <div>
-              <div className="font-bold text-xs">Authentication Header</div>
+              <div className="font-bold text-xs">Authorization Headers</div>
               <p className="mt-1 text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
-                Pass your API key in all requests via <code className="bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded font-mono text-[11px]">X-API-Key: sk_qn_...</code> or <code className="bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded font-mono text-[11px]">Authorization: Bearer sk_qn_...</code>.
+                Include your key in request headers via <code className="bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded font-mono text-[11px]">X-API-Key: sk_qn_...</code> or <code className="bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded font-mono text-[11px]">Authorization: Bearer sk_qn_...</code>.
               </p>
             </div>
           </div>
 
           <div className="space-y-3">
             {/* Notes Query */}
-            <div className="p-4 bg-white dark:bg-[#28292c] rounded-[6px] border border-gray-200 dark:border-[#3c4043] space-y-2.5 shadow-xs">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-[6px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs font-mono">
-                  GET
-                </span>
-                <span className="font-mono font-bold text-xs text-gray-900 dark:text-gray-100">
-                  /api/notes
-                </span>
+            <div className="p-4 bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] font-mono border border-emerald-200/60 dark:border-emerald-800/60">
+                    GET
+                  </span>
+                  <span className="font-mono font-bold text-xs text-gray-900 dark:text-gray-100">
+                    /api/notes
+                  </span>
+                </div>
+                <span className="text-[11px] text-gray-400">Search & filter notes</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Search and filter notes with date ranges, multi-label matching (AND/OR), full-text query, and attachments.
+                Full-text search, label filtering (AND/OR), date ranges, and attachment metadata.
               </p>
-              <pre className="p-3.5 bg-gray-900 text-gray-100 rounded-[6px] font-mono text-[11px] overflow-x-auto">
-{`curl -X GET "http://localhost:3000/api/notes?q=kyoto&tag_ids=uuid1,uuid2&tag_match=and" \
+              <pre className="p-3 bg-gray-950 text-gray-100 rounded-lg font-mono text-[11px] overflow-x-auto border border-gray-800">
+{`curl -X GET "http://localhost:3000/api/notes?q=meeting&tag_match=and" \\
   -H "X-API-Key: sk_qn_your_key_here"`}
               </pre>
             </div>
 
             {/* Note Creation */}
-            <div className="p-4 bg-white dark:bg-[#28292c] rounded-[6px] border border-gray-200 dark:border-[#3c4043] space-y-2.5 shadow-xs">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-[6px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-xs font-mono">
-                  POST
-                </span>
-                <span className="font-mono font-bold text-xs text-gray-900 dark:text-gray-100">
-                  /api/notes
-                </span>
+            <div className="p-4 bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-[11px] font-mono border border-blue-200/60 dark:border-blue-800/60">
+                    POST
+                  </span>
+                  <span className="font-mono font-bold text-xs text-gray-900 dark:text-gray-100">
+                    /api/notes
+                  </span>
+                </div>
+                <span className="text-[11px] text-gray-400">Create a note</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Create a note with checklists, color, and tags.
+                Create markdown notes with checklists, color themes, and hierarchical tags.
               </p>
-              <pre className="p-3.5 bg-gray-900 text-gray-100 rounded-[6px] font-mono text-[11px] overflow-x-auto">
-{`curl -X POST "http://localhost:3000/api/notes" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: sk_qn_your_key_here" \
+              <pre className="p-3 bg-gray-950 text-gray-100 rounded-lg font-mono text-[11px] overflow-x-auto border border-gray-800">
+{`curl -X POST "http://localhost:3000/api/notes" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: sk_qn_your_key_here" \\
   -d '{
-    "title": "Meeting Summary",
-    "content": "Discussed roadmap and 2026 deliverables.",
+    "title": "Release Notes v1.2",
+    "content": "Updated settings modal and storage sync engine.",
     "color": "mint",
-    "checklist_items": [{"text": "Follow up with team", "is_completed": false}]
+    "checklist_items": [{"text": "Deploy to staging", "is_completed": true}]
   }'`}
               </pre>
             </div>
 
             {/* Labels Management */}
-            <div className="p-4 bg-white dark:bg-[#28292c] rounded-[6px] border border-gray-200 dark:border-[#3c4043] space-y-2.5 shadow-xs">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-[6px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs font-mono">
-                  GET
-                </span>
-                <span className="font-mono font-bold text-xs text-gray-900 dark:text-gray-100">
-                  /api/tags
-                </span>
+            <div className="p-4 bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] font-mono border border-emerald-200/60 dark:border-emerald-800/60">
+                    GET
+                  </span>
+                  <span className="font-mono font-bold text-xs text-gray-900 dark:text-gray-100">
+                    /api/tags
+                  </span>
+                </div>
+                <span className="text-[11px] text-gray-400">Fetch label tree</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Fetch 2-step nested label hierarchy (tree and flat list with note counts).
+                Retrieve root categories and nested sub-labels with note counts.
               </p>
             </div>
           </div>
@@ -319,134 +442,16 @@ export const ApiSettings: React.FC = () => {
             <button
               type="button"
               onClick={() => copyToClipboard(JSON.stringify(aiToolsSpec?.tools || [], null, 2))}
-              className="h-9 px-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-gray-700 dark:text-gray-200 rounded-[6px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+              className="h-8 px-3 rounded-lg border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#252629] hover:bg-gray-50 text-gray-700 dark:text-gray-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
             >
               {copiedKey ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>Copy Tool Schemas (JSON)</span>
+              <span>{copiedKey ? 'Copied' : 'Copy Schemas (JSON)'}</span>
             </button>
           </div>
 
-          <pre className="p-4 bg-gray-950 text-gray-100 rounded-[6px] font-mono text-[11px] overflow-x-auto max-h-96 border border-gray-800 shadow-inner">
+          <pre className="p-4 bg-gray-950 text-gray-100 rounded-xl font-mono text-[11px] overflow-x-auto max-h-96 border border-gray-800 shadow-inner">
             {JSON.stringify(aiToolsSpec?.tools || [], null, 2)}
           </pre>
-        </div>
-      )}
-
-      {/* Reveal Generated Key Modal */}
-      {revealedKey && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div
-            className="w-full max-w-lg bg-white dark:bg-[#28292c] rounded-[6px] shadow-keep-modal border border-gray-200 dark:border-[#3c4043] overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4.5 border-b border-gray-100 dark:border-[#3c4043] flex items-center justify-between">
-              <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Key className="w-4 h-4 text-emerald-500" />
-                API Key Generated Successfully
-              </h3>
-              <button
-                type="button"
-                onClick={() => setRevealedKey(null)}
-                className="p-1.5 rounded-[6px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4 text-xs">
-              <div className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 rounded-[6px] border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-xs">
-                ⚠️ <strong>Save this key immediately.</strong> You will not be able to view it again once this modal is closed.
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Your Secret API Key
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={revealedKey}
-                    className="flex-1 h-10 px-3.5 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] font-mono text-xs text-gray-900 dark:text-gray-100 select-all focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(revealedKey)}
-                    className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-[6px] font-semibold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                  >
-                    {copiedKey ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    <span>Copy</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-3 border-t border-gray-100 dark:border-[#3c4043]">
-                <button
-                  type="button"
-                  onClick={() => setRevealedKey(null)}
-                  className="h-10 px-4 bg-gray-900 hover:bg-black dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-white font-semibold text-xs rounded-[6px] transition-all cursor-pointer"
-                >
-                  I have saved my key
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Generate API Key Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div
-            className="w-full max-w-md bg-white dark:bg-[#28292c] rounded-[6px] shadow-keep-modal border border-gray-200 dark:border-[#3c4043] overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4.5 border-b border-gray-100 dark:border-[#3c4043] flex items-center justify-between">
-              <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Key className="w-4 h-4 text-amber-500" />
-                Generate New API Key
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="p-1.5 rounded-[6px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateKey} className="p-5 space-y-4 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Key Name / Description *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newKeyName}
-                  onChange={(e) => setNewKeyName(e.target.value)}
-                  placeholder="e.g. Antigravity Agent, Claude Desktop, Cron Sync"
-                  className="w-full h-10 px-3.5 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-[#3c4043]">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="h-9 px-4 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#3c4043] rounded-[6px] text-xs font-semibold transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="h-9 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-semibold text-xs rounded-[6px] shadow-xs transition-all cursor-pointer"
-                >
-                  Generate Key
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </div>

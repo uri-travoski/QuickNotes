@@ -134,6 +134,9 @@ export async function seed() {
     const businessRoot = await client.query(
       `INSERT INTO tags (name, parent_id, color, sort_order) VALUES ('Business', NULL, 'mint', 7) RETURNING id`
     );
+    const financeRoot = await client.query(
+      `INSERT INTO tags (name, parent_id, color, sort_order) VALUES ('Finance', NULL, 'amber', 8) RETURNING id`
+    );
 
     // Level 2: Sub-labels
     const wisdomSub = await client.query(
@@ -149,7 +152,7 @@ export async function seed() {
       [personalRoot.rows[0].id]
     );
     const orgSub = await client.query(
-      `INSERT INTO tags (name, parent_id, color, sort_order) VALUES ('Organise-Declutter', $1, 'storm', 3) RETURNING id`,
+      `INSERT INTO tags (name, parent_id, color, sort_order) VALUES ('Orqanise-Declutter', $1, 'storm', 3) RETURNING id`,
       [personalRoot.rows[0].id]
     );
     const studySub = await client.query(
@@ -196,6 +199,11 @@ export async function seed() {
     const empSub = await client.query(
       `INSERT INTO tags (name, parent_id, color, sort_order) VALUES ('Employees', $1, 'mint', 1) RETURNING id`,
       [businessRoot.rows[0].id]
+    );
+
+    const tradingSub = await client.query(
+      `INSERT INTO tags (name, parent_id, color, sort_order) VALUES ('Trading', $1, 'amber', 0) RETURNING id`,
+      [financeRoot.rows[0].id]
     );
 
     // 5. Note 1: Trip to Kyoto (Starred, Coral, Images, Checklist, Nested Labels)

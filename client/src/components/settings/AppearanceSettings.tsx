@@ -8,6 +8,8 @@ import {
   Type,
   Maximize2,
   Coffee,
+  Check,
+  Sparkles,
 } from 'lucide-react';
 import { useNotes, FONT_FAMILIES, FONT_SIZES } from '../../context/NotesContext';
 import { FontFamilyOption, FontSizeOption, AppTheme } from '../../types';
@@ -42,20 +44,20 @@ export const AppearanceSettings: React.FC = () => {
     setTheme(newTheme);
     const themeNames: Record<AppTheme, string> = {
       default: 'Default Light',
-      dark: 'Dark',
-      coffee: 'Coffee',
-      kraft: 'Coffee',
+      dark: 'Dark Mode',
+      coffee: 'Warm Coffee',
+      kraft: 'Warm Coffee',
     };
-    showToast(`Switched to ${themeNames[newTheme]} theme`);
+    showToast(`Switched to ${themeNames[newTheme]}`);
   };
 
-  const fontOptions: { id: FontFamilyOption; label: string; desc: string }[] = [
-    { id: 'ibm', label: 'IBM Plex Sans', desc: 'Modern & Engineered' },
-    { id: 'jakarta', label: 'Plus Jakarta', desc: 'Clean & Contemporary' },
-    { id: 'inter', label: 'Inter', desc: 'Highly Legible Neutral' },
-    { id: 'noto', label: 'Noto Sans', desc: 'Google Standard' },
-    { id: 'merriweather', label: 'Merriweather', desc: 'Editorial Serif' },
-    { id: 'system', label: 'System Default', desc: 'Native OS Typeface' },
+  const fontOptions: { id: FontFamilyOption; label: string; desc: string; sample: string }[] = [
+    { id: 'ibm', label: 'IBM Plex Sans', desc: 'Engineered & Modern', sample: 'Aa Bb 123' },
+    { id: 'jakarta', label: 'Plus Jakarta', desc: 'Clean & Contemporary', sample: 'Aa Bb 123' },
+    { id: 'inter', label: 'Inter', desc: 'Neutral & High Legibility', sample: 'Aa Bb 123' },
+    { id: 'noto', label: 'Noto Sans', desc: 'Google Standard Sans', sample: 'Aa Bb 123' },
+    { id: 'merriweather', label: 'Merriweather', desc: 'Editorial Serif', sample: 'Aa Bb 123' },
+    { id: 'system', label: 'System Default', desc: 'Native OS Typeface', sample: 'Aa Bb 123' },
   ];
 
   const sizeOptions: { id: FontSizeOption; label: string; px: string }[] = [
@@ -74,20 +76,20 @@ export const AppearanceSettings: React.FC = () => {
   }[] = [
     {
       id: 'default',
-      label: 'Default',
-      desc: 'Crisp white cards & clean canvas',
+      label: 'Default Light',
+      desc: 'Crisp white cards on a light canvas',
       icon: <Sun className="w-4 h-4 text-amber-500" />,
     },
     {
       id: 'dark',
-      label: 'Dark',
-      desc: 'Sleek #202124 dark surface',
+      label: 'Dark Mode',
+      desc: 'Deep dark surface with high contrast text',
       icon: <Moon className="w-4 h-4 text-indigo-400" />,
     },
     {
       id: 'coffee',
-      label: 'Coffee',
-      desc: 'Warm paper, parchment cards & espresso typography',
+      label: 'Warm Coffee',
+      desc: 'Parchment background with espresso typography',
       icon: <Coffee className="w-4 h-4 text-amber-700" />,
     },
   ];
@@ -96,28 +98,37 @@ export const AppearanceSettings: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Palette className="w-5 h-5 text-amber-500" />
+        <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Palette className="w-4.5 h-4.5 text-amber-500" />
           Appearance & Typography
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Customize typography, scale, base font sizes, and theme colors.
+          Customize font family, base scaling, theme colors, and live preview your notes layout.
         </p>
       </div>
 
       {/* Card 1: Font Family */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] space-y-3.5 shadow-xs">
-        <div className="flex items-center gap-2">
-          <Type className="w-4 h-4 text-amber-500" />
-          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
-            Font Family
-          </h3>
+      <div className="p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+              <Type className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                Font Family
+              </h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Typeface applied across all notes, sidebars, and dialogs
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+            {FONT_FAMILIES[fontFamily]?.name}
+          </span>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
-          Choose the typeface applied across the entire application interface.
-        </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {fontOptions.map((opt) => {
             const isSelected = fontFamily === opt.id;
             return (
@@ -125,16 +136,31 @@ export const AppearanceSettings: React.FC = () => {
                 key={opt.id}
                 type="button"
                 onClick={() => handleFontChange(opt.id)}
-                className={`h-12 px-3.5 rounded-[6px] text-left transition-all cursor-pointer flex flex-col justify-center ${
+                className={`p-3 rounded-lg text-left transition-all cursor-pointer flex items-center justify-between border ${
                   isSelected
-                    ? 'bg-amber-500 text-gray-950 font-bold ring-2 ring-amber-400/40 shadow-xs'
-                    : 'bg-gray-50 hover:bg-gray-100 dark:bg-[#202124] dark:hover:bg-[#323438] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-[#3c4043]'
+                    ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 text-amber-950 dark:text-amber-100 ring-1 ring-amber-500/30 shadow-xs'
+                    : 'border-gray-200/80 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f] text-gray-800 dark:text-gray-200'
                 }`}
               >
-                <span className="text-xs font-semibold leading-tight">{opt.label}</span>
-                <span className={`text-[10px] ${isSelected ? 'text-gray-900/80' : 'text-gray-400 dark:text-gray-500'}`}>
-                  {opt.desc}
-                </span>
+                <div className="min-w-0 pr-2">
+                  <div className="text-xs font-semibold leading-tight truncate flex items-center gap-1.5">
+                    <span>{opt.label}</span>
+                  </div>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">
+                    {opt.desc}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 font-mono hidden sm:inline">
+                    {opt.sample}
+                  </span>
+                  {isSelected && (
+                    <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center">
+                      <Check className="w-3 h-3 stroke-[2.5]" />
+                    </div>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -142,18 +168,27 @@ export const AppearanceSettings: React.FC = () => {
       </div>
 
       {/* Card 2: Base Font Size */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] space-y-3.5 shadow-xs">
-        <div className="flex items-center gap-2">
-          <Maximize2 className="w-4 h-4 text-amber-500" />
-          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
-            Base Font Size
-          </h3>
+      <div className="p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+              <Maximize2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                Base Font Size
+              </h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Scales note cards, body text, lists, and checklists
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 font-mono">
+            {FONT_SIZES[fontSize]?.label} ({FONT_SIZES[fontSize]?.description})
+          </span>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
-          Adjust text scale across notes, sidebar, checklists, and editor components.
-        </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {sizeOptions.map((opt) => {
             const isSelected = fontSize === opt.id;
             return (
@@ -161,14 +196,14 @@ export const AppearanceSettings: React.FC = () => {
                 key={opt.id}
                 type="button"
                 onClick={() => handleSizeChange(opt.id)}
-                className={`h-11 px-3 rounded-[6px] text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                className={`h-11 px-2.5 rounded-lg text-center transition-all cursor-pointer flex flex-col items-center justify-center border ${
                   isSelected
-                    ? 'bg-amber-500 text-gray-950 font-bold ring-2 ring-amber-400/40 shadow-xs'
-                    : 'bg-gray-50 hover:bg-gray-100 dark:bg-[#202124] dark:hover:bg-[#323438] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-[#3c4043]'
+                    ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 text-amber-950 dark:text-amber-100 ring-1 ring-amber-500/30 shadow-xs font-bold'
+                    : 'border-gray-200/80 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f] text-gray-800 dark:text-gray-200'
                 }`}
               >
-                <span className="text-xs font-semibold leading-tight">{opt.label}</span>
-                <span className={`text-[10px] font-mono ${isSelected ? 'text-gray-900/80' : 'text-gray-400 dark:text-gray-500'}`}>
+                <span className="text-xs font-medium leading-tight">{opt.label}</span>
+                <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500 mt-0.5">
                   {opt.px}
                 </span>
               </button>
@@ -178,18 +213,24 @@ export const AppearanceSettings: React.FC = () => {
       </div>
 
       {/* Card 3: Color Theme */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] space-y-3.5 shadow-xs">
-        <div className="flex items-center gap-2">
-          <Sun className="w-4 h-4 text-amber-500" />
-          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
-            Theme Mode
-          </h3>
+      <div className="p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+              <Sun className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                Theme Mode
+              </h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Select contrast and color ambiance
+              </p>
+            </div>
+          </div>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
-          Choose between Google Keep light canvas, high-contrast dark theme, or warm Coffee paper theme.
-        </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {themeOptions.map((opt) => {
             const isSelected = theme === opt.id || (opt.id === 'coffee' && theme === 'kraft');
             return (
@@ -197,26 +238,27 @@ export const AppearanceSettings: React.FC = () => {
                 key={opt.id}
                 type="button"
                 onClick={() => handleThemeChange(opt.id)}
-                className={`h-16 px-3.5 rounded-[6px] text-left transition-all cursor-pointer flex items-center gap-3 ${
+                className={`p-3.5 rounded-lg text-left transition-all cursor-pointer flex items-center gap-3 border ${
                   isSelected
-                    ? 'bg-amber-500 text-gray-950 font-bold ring-2 ring-amber-400/40 shadow-xs'
-                    : 'bg-gray-50 hover:bg-gray-100 dark:bg-[#202124] dark:hover:bg-[#323438] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-[#3c4043]'
+                    ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 text-amber-950 dark:text-amber-100 ring-1 ring-amber-500/30 shadow-xs'
+                    : 'border-gray-200/80 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f] text-gray-800 dark:text-gray-200'
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-[6px] flex items-center justify-center flex-shrink-0 ${
-                    isSelected ? 'bg-black/10 text-gray-950' : 'bg-white dark:bg-[#2d2e30] shadow-xs'
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border ${
+                    isSelected
+                      ? 'bg-white dark:bg-[#202124] border-amber-300 dark:border-amber-700 shadow-xs'
+                      : 'bg-white dark:bg-[#28292c] border-gray-200 dark:border-[#3c4043]'
                   }`}
                 >
                   {opt.icon}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold leading-tight truncate">{opt.label}</div>
-                  <div
-                    className={`text-[10px] leading-tight line-clamp-2 mt-0.5 ${
-                      isSelected ? 'text-gray-900/80' : 'text-gray-400 dark:text-gray-500'
-                    }`}
-                  >
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold leading-tight flex items-center justify-between">
+                    <span>{opt.label}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 stroke-[2.5]" />}
+                  </div>
+                  <div className="text-[10px] leading-tight text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
                     {opt.desc}
                   </div>
                 </div>
@@ -227,18 +269,24 @@ export const AppearanceSettings: React.FC = () => {
       </div>
 
       {/* Live Preview Card */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] space-y-3 shadow-xs">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-          Live Note Card Preview ({isWarmTheme ? 'Coffee' : isDarkMode ? 'Dark' : 'Default'})
+      <div className="p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] space-y-3 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Interactive Note Card Preview</span>
+          </div>
+          <span className="text-[10px] font-medium text-gray-400 font-mono">
+            {isWarmTheme ? 'Warm Coffee' : isDarkMode ? 'Dark Mode' : 'Default Light'} • {FONT_FAMILIES[fontFamily]?.name}
+          </span>
         </div>
 
         <div
-          className={`p-4 rounded-xl border shadow-xs space-y-2.5 transition-all ${
+          className={`p-4.5 rounded-xl border shadow-xs space-y-3 transition-all ${
             isWarmTheme
               ? 'bg-[#fbf8f1] border-[#dfd3c0] text-[#3c2a1d]'
               : isDarkMode
-              ? 'bg-[#2e261f] border-amber-900/60 text-gray-100'
-              : 'bg-amber-50/70 border-amber-200/80 text-gray-900'
+              ? 'bg-[#2b2723] border-amber-900/40 text-gray-100'
+              : 'bg-amber-50/60 border-amber-200/80 text-gray-900'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -248,34 +296,34 @@ export const AppearanceSettings: React.FC = () => {
               }`}
             >
               <span>Trip to Kyoto & Tokyo 🌸</span>
-              <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
             </h4>
             <span
-              className={`px-2 py-0.5 rounded-[6px] text-[11px] font-bold ${
+              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
                 isWarmTheme
                   ? 'bg-[#e8dece] text-[#5c4028] border border-[#dfd3c0]'
-                  : 'bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200'
+                  : 'bg-amber-200/70 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200'
               }`}
             >
-              Travel / Kyoto & Tokyo
+              Travel / Japan 2026
             </span>
           </div>
 
           <p
-            className={`text-xs ${
+            className={`text-xs leading-relaxed ${
               isWarmTheme ? 'text-[#453325]' : 'text-gray-700 dark:text-gray-300'
             }`}
           >
             Exploring traditional shrines, historic tea houses, and modern design hubs across Kansai.
           </p>
 
-          <div className="space-y-1 text-xs">
+          <div className="space-y-1.5 text-xs pt-0.5">
             <div
               className={`flex items-center gap-2 line-through ${
-                isWarmTheme ? 'text-[#806f60]' : 'text-gray-500'
+                isWarmTheme ? 'text-[#806f60]' : 'text-gray-500 dark:text-gray-400'
               }`}
             >
-              <CheckSquare className="w-3.5 h-3.5 text-emerald-500" />
+              <CheckSquare className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
               <span>Book Shinkansen express train tickets</span>
             </div>
             <div
@@ -286,7 +334,7 @@ export const AppearanceSettings: React.FC = () => {
               <div
                 className={`w-3.5 h-3.5 rounded border ${
                   isWarmTheme ? 'border-[#806f60]' : 'border-gray-400 dark:border-gray-500'
-                }`}
+                } flex-shrink-0`}
               />
               <span>Visit Fushimi Inari shrine at sunrise</span>
             </div>

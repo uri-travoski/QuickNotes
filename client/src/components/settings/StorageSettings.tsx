@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  HardDrive,
   Cloud,
   Check,
   Save,
@@ -16,7 +15,6 @@ import {
   Shield,
   RefreshCw,
   Loader2,
-  X,
   Eye,
   EyeOff,
 } from 'lucide-react';
@@ -433,21 +431,11 @@ export const StorageSettings: React.FC = () => {
   const isGDriveOAuthConnected = !!(gdriveConfig.connected_email || gdriveConfig.has_refresh_token || gdriveConfig.refresh_token);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <HardDrive className="w-5 h-5 text-amber-500" />
-          Storage Providers
-        </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Configure where note attachments and multimedia files are stored. Local disk, S3-compatible cloud storage, and Google Drive (OAuth 2.1 or Service Account) are supported.
-        </p>
-      </div>
-
+    <div className="space-y-5 animate-fade-in">
       {loading ? (
-        <div className="py-12 text-center text-gray-400 text-xs font-medium animate-pulse">
-          Loading storage configurations...
+        <div className="py-12 text-center text-gray-400 text-xs font-medium animate-pulse flex flex-col items-center gap-2">
+          <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+          <span>Loading storage configurations...</span>
         </div>
       ) : (
         <div className="space-y-5">
@@ -455,16 +443,16 @@ export const StorageSettings: React.FC = () => {
           {/* 1. Local Disk Storage Card                                                */}
           {/* ========================================================================= */}
           <div
-            className={`p-5 rounded-[6px] border transition-all ${
+            className={`p-5 rounded-xl border transition-all ${
               activeProvider === 'local'
-                ? 'border-amber-500/80 ring-2 ring-amber-400/20 bg-amber-500/[0.02] dark:bg-amber-500/[0.04]'
-                : 'border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c]'
+                ? 'border-amber-500/70 ring-1 ring-amber-500/30 bg-white dark:bg-[#252629] shadow-xs'
+                : 'border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629]'
             }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-[6px] bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 shadow-xs">
-                  <Folder className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 border border-amber-500/20">
+                  <Folder className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -472,32 +460,32 @@ export const StorageSettings: React.FC = () => {
                       Local Disk Storage
                     </h3>
                     {activeProvider === 'local' && (
-                      <span className="px-2 py-0.5 rounded-[6px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-200/60 dark:border-emerald-900/60">
                         Active Provider
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    Stores files locally inside the container filesystem volume (<code className="font-mono text-[11px]">./uploads</code>).
+                    Stores files inside the application filesystem (<code className="font-mono text-[11px]">./uploads</code>).
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex items-center gap-2 self-start sm:self-center">
                 <button
                   type="button"
                   disabled={testingType === 'local'}
                   onClick={() => handleTestConnection('local')}
-                  className="h-9 px-3.5 rounded-[6px] bg-gray-100 hover:bg-gray-200 dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-gray-700 dark:text-gray-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="h-8 px-3 rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-50 dark:hover:bg-[#323438] text-gray-700 dark:text-gray-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                 >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>{testingType === 'local' ? 'Testing...' : 'Test Connection'}</span>
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{testingType === 'local' ? 'Testing...' : 'Test Access'}</span>
                 </button>
                 {activeProvider !== 'local' && (
                   <button
                     type="button"
                     onClick={() => handleSetActive('local')}
-                    className="h-9 px-4 rounded-[6px] bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="h-8 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Set Active</span>
@@ -508,13 +496,13 @@ export const StorageSettings: React.FC = () => {
 
             {testResults['local'] && (
               <div
-                className={`mt-4 p-3.5 rounded-[6px] text-xs flex items-center gap-2.5 ${
+                className={`mt-3 p-2.5 px-3 rounded-lg text-xs flex items-center gap-2 ${
                   testResults['local'].success
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                    : 'bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80'
+                    : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200/80 dark:border-red-800/80'
                 }`}
               >
-                {testResults['local'].success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
+                {testResults['local'].success ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
                 <span className="flex-1 font-medium">{testResults['local'].message}</span>
                 {testResults['local'].latencyMs !== undefined && (
                   <span className="text-[10px] opacity-75 font-mono">({testResults['local'].latencyMs}ms)</span>
@@ -527,16 +515,16 @@ export const StorageSettings: React.FC = () => {
           {/* 2. Amazon S3 / S3-Compatible Storage Card                                 */}
           {/* ========================================================================= */}
           <div
-            className={`p-5 rounded-[6px] border transition-all ${
+            className={`p-5 rounded-xl border transition-all ${
               activeProvider === 's3'
-                ? 'border-amber-500/80 ring-2 ring-amber-400/20 bg-amber-500/[0.02] dark:bg-amber-500/[0.04]'
-                : 'border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c]'
+                ? 'border-amber-500/70 ring-1 ring-amber-500/30 bg-white dark:bg-[#252629] shadow-xs'
+                : 'border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629]'
             }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-[6px] bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-xs">
-                  <Cloud className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                  <Cloud className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -544,7 +532,7 @@ export const StorageSettings: React.FC = () => {
                       Amazon S3 / S3-Compatible Cloud Storage
                     </h3>
                     {activeProvider === 's3' && (
-                      <span className="px-2 py-0.5 rounded-[6px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-200/60 dark:border-emerald-900/60">
                         Active Provider
                       </span>
                     )}
@@ -555,21 +543,21 @@ export const StorageSettings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex items-center gap-2 self-start sm:self-center">
                 <button
                   type="button"
                   disabled={testingType === 's3'}
                   onClick={() => handleTestConnection('s3')}
-                  className="h-9 px-3.5 rounded-[6px] bg-gray-100 hover:bg-gray-200 dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-gray-700 dark:text-gray-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="h-8 px-3 rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-50 dark:hover:bg-[#323438] text-gray-700 dark:text-gray-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                 >
-                  <Zap className="w-3.5 h-3.5" />
+                  <Zap className="w-3.5 h-3.5 text-blue-500" />
                   <span>{testingType === 's3' ? 'Testing...' : 'Test Connection'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleSaveConfig('s3')}
-                  className="h-9 px-3.5 rounded-[6px] bg-gray-900 hover:bg-black dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="h-8 px-3.5 rounded-lg bg-gray-800 hover:bg-gray-900 dark:bg-[#35363a] dark:hover:bg-[#404247] text-white text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save</span>
@@ -579,7 +567,7 @@ export const StorageSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSetActive('s3')}
-                    className="h-9 px-4 rounded-[6px] bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="h-8 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Set Active</span>
@@ -590,13 +578,13 @@ export const StorageSettings: React.FC = () => {
 
             {testResults['s3'] && (
               <div
-                className={`mt-4 p-3.5 rounded-[6px] text-xs flex items-center gap-2.5 ${
+                className={`mt-3 p-2.5 px-3 rounded-lg text-xs flex items-center gap-2 ${
                   testResults['s3'].success
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                    : 'bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80'
+                    : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200/80 dark:border-red-800/80'
                 }`}
               >
-                {testResults['s3'].success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
+                {testResults['s3'].success ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
                 <span className="flex-1 font-medium">{testResults['s3'].message}</span>
                 {testResults['s3'].latencyMs !== undefined && (
                   <span className="text-[10px] opacity-75 font-mono">({testResults['s3'].latencyMs}ms)</span>
@@ -605,9 +593,9 @@ export const StorageSettings: React.FC = () => {
             )}
 
             {/* S3 Form Inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-4 text-xs">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Bucket Name *
                 </label>
                 <input
@@ -615,12 +603,12 @@ export const StorageSettings: React.FC = () => {
                   placeholder="e.g. my-saved-notes-bucket"
                   value={s3Config.bucket_name}
                   onChange={(e) => setS3Config({ ...s3Config, bucket_name: e.target.value })}
-                  className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Region *
                 </label>
                 <input
@@ -628,12 +616,12 @@ export const StorageSettings: React.FC = () => {
                   placeholder="e.g. us-east-1, auto, eu-central-1"
                   value={s3Config.region}
                   onChange={(e) => setS3Config({ ...s3Config, region: e.target.value })}
-                  className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Endpoint URL (Optional)
                 </label>
                 <input
@@ -641,12 +629,12 @@ export const StorageSettings: React.FC = () => {
                   placeholder="e.g. https://<account>.r2.cloudflarestorage.com"
                   value={s3Config.endpoint_url}
                   onChange={(e) => setS3Config({ ...s3Config, endpoint_url: e.target.value })}
-                  className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Custom CDN / Public Domain (Optional)
                 </label>
                 <input
@@ -654,12 +642,12 @@ export const StorageSettings: React.FC = () => {
                   placeholder="e.g. https://cdn.example.com"
                   value={s3Config.custom_domain}
                   onChange={(e) => setS3Config({ ...s3Config, custom_domain: e.target.value })}
-                  className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Access Key ID *
                 </label>
                 <input
@@ -667,12 +655,12 @@ export const StorageSettings: React.FC = () => {
                   placeholder="e.g. AKIAIOSFODNN7EXAMPLE"
                   value={s3Config.access_key_id}
                   onChange={(e) => setS3Config({ ...s3Config, access_key_id: e.target.value })}
-                  className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Secret Access Key *
                 </label>
                 <input
@@ -680,7 +668,7 @@ export const StorageSettings: React.FC = () => {
                   placeholder="••••••••••••••••"
                   value={s3Config.secret_access_key}
                   onChange={(e) => setS3Config({ ...s3Config, secret_access_key: e.target.value })}
-                  className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                  className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
             </div>
@@ -690,16 +678,16 @@ export const StorageSettings: React.FC = () => {
           {/* 3. Google Drive Storage Card (OAuth 2.1 & Service Account)                 */}
           {/* ========================================================================= */}
           <div
-            className={`p-5 rounded-[6px] border transition-all ${
+            className={`p-5 rounded-xl border transition-all ${
               activeProvider === 'gdrive'
-                ? 'border-amber-500/80 ring-2 ring-amber-400/20 bg-amber-500/[0.02] dark:bg-amber-500/[0.04]'
-                : 'border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c]'
+                ? 'border-amber-500/70 ring-1 ring-amber-500/30 bg-white dark:bg-[#252629] shadow-xs'
+                : 'border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629]'
             }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-[6px] bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 shadow-xs">
-                  <Cloud className="w-5 h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 border border-purple-500/20">
+                  <Cloud className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -707,32 +695,32 @@ export const StorageSettings: React.FC = () => {
                       Google Drive Storage
                     </h3>
                     {activeProvider === 'gdrive' && (
-                      <span className="px-2 py-0.5 rounded-[6px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-200/60 dark:border-emerald-900/60">
                         Active Provider
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    Direct integration via Google Drive API v3 (1-Click OAuth 2.1 or Service Account).
+                    Direct cloud integration via Google Drive API v3 (OAuth 2.1 or Service Account).
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
                 <button
                   type="button"
                   disabled={testingType === 'gdrive'}
                   onClick={() => handleTestConnection('gdrive')}
-                  className="h-9 px-3.5 rounded-[6px] bg-gray-100 hover:bg-gray-200 dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-gray-700 dark:text-gray-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="h-8 px-3 rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-50 dark:hover:bg-[#323438] text-gray-700 dark:text-gray-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                 >
-                  <Zap className="w-3.5 h-3.5" />
+                  <Zap className="w-3.5 h-3.5 text-purple-500" />
                   <span>{testingType === 'gdrive' ? 'Testing...' : 'Test Connection'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleSaveConfig('gdrive')}
-                  className="h-9 px-3.5 rounded-[6px] bg-gray-900 hover:bg-black dark:bg-[#3c4043] dark:hover:bg-[#484c50] text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="h-8 px-3.5 rounded-lg bg-gray-800 hover:bg-gray-900 dark:bg-[#35363a] dark:hover:bg-[#404247] text-white text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save</span>
@@ -743,11 +731,11 @@ export const StorageSettings: React.FC = () => {
                     type="button"
                     disabled={isSyncingStorage}
                     onClick={handleSyncStorage}
-                    className="h-9 px-3.5 rounded-[6px] bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
-                    title="Upload all existing local attachments to your Google Drive folder"
+                    className="h-8 px-3 rounded-lg border border-purple-200 dark:border-purple-900/60 bg-purple-50/60 dark:bg-purple-950/30 hover:bg-purple-100/60 text-purple-700 dark:text-purple-300 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    title="Upload existing local attachments to Google Drive folder"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isSyncingStorage ? 'animate-spin' : ''}`} />
-                    <span>{isSyncingStorage ? 'Syncing Files...' : 'Sync Local Files'}</span>
+                    <span>{isSyncingStorage ? 'Syncing...' : 'Sync Local Files'}</span>
                   </button>
                 )}
 
@@ -755,7 +743,7 @@ export const StorageSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSetActive('gdrive')}
-                    className="h-9 px-4 rounded-[6px] bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="h-8 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Set Active</span>
@@ -766,13 +754,13 @@ export const StorageSettings: React.FC = () => {
 
             {testResults['gdrive'] && (
               <div
-                className={`mt-4 p-3.5 rounded-[6px] text-xs flex items-center gap-2.5 ${
+                className={`mt-3 p-2.5 px-3 rounded-lg text-xs flex items-center gap-2 ${
                   testResults['gdrive'].success
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                    : 'bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80'
+                    : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200/80 dark:border-red-800/80'
                 }`}
               >
-                {testResults['gdrive'].success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
+                {testResults['gdrive'].success ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
                 <span className="flex-1 font-medium">{testResults['gdrive'].message}</span>
                 {testResults['gdrive'].latencyMs !== undefined && (
                   <span className="text-[10px] opacity-75 font-mono">({testResults['gdrive'].latencyMs}ms)</span>
@@ -782,14 +770,14 @@ export const StorageSettings: React.FC = () => {
 
             {/* Google Drive Mode Switcher Tabs */}
             <div className="pt-4">
-              <div className="flex items-center gap-1 p-1 rounded-[6px] bg-gray-100/80 dark:bg-[#1a1b1e] border border-gray-200/60 dark:border-[#3c4043] w-fit mb-4">
+              <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-gray-100/90 dark:bg-[#1a1b1e] border border-gray-200/80 dark:border-[#3c4043] mb-4">
                 <button
                   type="button"
                   onClick={() => setGdriveAuthMode('oauth')}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                     gdriveAuthMode === 'oauth'
-                      ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs font-semibold'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
                   <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24">
@@ -798,135 +786,114 @@ export const StorageSettings: React.FC = () => {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                   </svg>
-                  <span>OAuth 2.1 (1-Click Google Sign-In with PKCE)</span>
+                  <span>OAuth 2.1 (Google Sign-In)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setGdriveAuthMode('service_account')}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                     gdriveAuthMode === 'service_account'
-                      ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      ? 'bg-white dark:bg-[#28292c] text-gray-900 dark:text-white shadow-xs font-semibold'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
-                  <FileText className="w-3.5 h-3.5" />
+                  <FileText className="w-3.5 h-3.5 text-purple-500" />
                   <span>Service Account JSON</span>
                 </button>
               </div>
 
-              {/* TAB 1: OAuth 2.0 (Personal Google Account) View */}
+              {/* TAB 1: OAuth 2.1 Mode */}
               {gdriveAuthMode === 'oauth' && (
-                <div className="space-y-4 text-xs">
-                  {/* Connected Banner (if authenticated) */}
+                <div className="space-y-3.5 text-xs">
+                  {/* Connected Status Card */}
                   {isGDriveOAuthConnected && (
-                    <div className="p-4 rounded-[6px] bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-[6px] bg-white dark:bg-[#202124] border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center shadow-xs flex-shrink-0">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24">
-                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-gray-900 dark:text-white">
-                                {gdriveConfig.connected_email || 'Connected Google Account'}
-                              </span>
-                              <span className="px-2 py-0.5 rounded-[6px] bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 text-[10px] font-bold">
-                                Active & Connected
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                              Files and attachments upload automatically to your personal Google Drive (5TB quota).
-                            </p>
-                          </div>
+                    <div className="p-3.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#202124] border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         </div>
-
-                        <button
-                          type="button"
-                          disabled={isDisconnecting}
-                          onClick={handleDisconnectGoogleDrive}
-                          className="h-8 px-3 rounded-[6px] bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 text-xs font-semibold transition-all flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
-                        >
-                          <LogOut className="w-3.5 h-3.5" />
-                          <span>{isDisconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
-                        </button>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-gray-900 dark:text-white">
+                              {gdriveConfig.connected_email || 'Connected Google Drive Account'}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200">
+                              Connected
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                            Attachments upload to your personal Google Drive storage.
+                          </p>
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        disabled={isDisconnecting}
+                        onClick={handleDisconnectGoogleDrive}
+                        className="h-7 px-2.5 rounded-md border border-red-200 dark:border-red-900/60 bg-white dark:bg-[#202124] hover:bg-red-50 dark:hover:bg-red-950/40 text-red-700 dark:text-red-300 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      >
+                        <LogOut className="w-3 h-3" />
+                        <span>{isDisconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
+                      </button>
                     </div>
                   )}
 
-                  {/* Clean Info Box matching reference */}
-                  <div className="p-3.5 rounded-[6px] bg-cyan-50/70 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-900/60 space-y-2">
-                    <p className="font-semibold text-xs text-cyan-950 dark:text-cyan-200">
-                      Personal Google account (not Workspace).
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-300 text-[11px] leading-relaxed">
-                      In Google Cloud: enable the Drive API, create an OAuth client (scope <code className="font-mono text-[10px] bg-cyan-100 dark:bg-cyan-900/60 px-1 py-0.5 rounded">drive.file</code>), and obtain a refresh token. Paste the values below — a self-hosted install can paste credentials directly or use the in-browser connect flow.
-                    </p>
-                    <div className="pt-1 flex flex-wrap items-center gap-3">
-                      <a
-                        href="https://developers.google.com/oauthplayground"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-cyan-400 hover:underline"
-                      >
-                        <span>Get Refresh Token via Google OAuth Playground</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      <span className="text-gray-300 dark:text-gray-600">•</span>
-                      <a
-                        href="https://console.cloud.google.com/apis/credentials"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-cyan-400 hover:underline"
-                      >
-                        <span>Google Cloud Console</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-
-                    {/* Copyable Redirect URI for in-browser flow */}
-                    <div className="flex items-center gap-2 p-1.5 pl-2.5 rounded-[6px] bg-white dark:bg-[#1a1b1e] border border-cyan-200 dark:border-cyan-900/80">
-                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">Redirect URI:</span>
-                      <code className="flex-1 text-[11px] font-mono text-cyan-900 dark:text-cyan-300 truncate select-all">
+                  {/* Redirect URI Box */}
+                  <div className="p-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200/80 dark:border-[#3c4043] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[10px] font-semibold uppercase text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        Redirect URI:
+                      </span>
+                      <code className="text-[11px] font-mono text-gray-700 dark:text-gray-300 truncate select-all">
                         {redirectUri}
                       </code>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={handleCopyRedirectUri}
-                        className="h-7 px-2.5 rounded-[4px] bg-cyan-100 dark:bg-cyan-900/80 hover:bg-cyan-200 dark:hover:bg-cyan-800 text-cyan-800 dark:text-cyan-200 text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                        className="h-7 px-2.5 rounded-md bg-white dark:bg-[#28292c] border border-gray-200 dark:border-[#3c4043] hover:bg-gray-50 text-gray-700 dark:text-gray-200 text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer flex-shrink-0"
                       >
                         {copiedRedirectUri ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                         <span>{copiedRedirectUri ? 'Copied' : 'Copy'}</span>
                       </button>
+
+                      <a
+                        href="https://console.cloud.google.com/apis/credentials"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-amber-600 hover:underline flex-shrink-0"
+                      >
+                        <span>Cloud Console</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
                   </div>
 
-                  {/* 1. Client ID */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {/* Client ID */}
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                       Client ID
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 303126050796-abc.apps.googleusercontent.com"
+                      placeholder="e.g. 12345-abc.apps.googleusercontent.com"
                       value={gdriveConfig.client_id}
                       onChange={(e) => setGdriveConfig({ ...gdriveConfig, client_id: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                      className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     />
                   </div>
 
-                  {/* 2. Client Secret */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        Client secret
+                  {/* Client Secret */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Client Secret
                       </label>
-                      <span className="text-[11px] text-gray-400">Stored — leave blank to keep it.</span>
+                      <span className="text-[11px] text-gray-400">Stored — leave blank to keep.</span>
                     </div>
                     <div className="relative">
                       <input
@@ -934,11 +901,11 @@ export const StorageSettings: React.FC = () => {
                         placeholder="•••••••• (set) or GOCSPX-..."
                         value={gdriveConfig.client_secret}
                         onChange={(e) => setGdriveConfig({ ...gdriveConfig, client_secret: e.target.value })}
-                        className={`w-full h-10 pl-3.5 pr-10 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border ${
+                        className={`w-full h-9 pl-3 pr-9 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border ${
                           isClientSecretClientId
-                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-                            : 'border-gray-200 dark:border-[#3c4043] focus:border-amber-500 focus:ring-amber-500/20'
-                        } text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:ring-2 transition-all`}
+                            ? 'border-red-500 focus:border-red-500'
+                            : 'border-gray-200 dark:border-[#3c4043] focus:border-amber-500'
+                        } text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all`}
                       />
                       <button
                         type="button"
@@ -946,38 +913,32 @@ export const StorageSettings: React.FC = () => {
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
                         title={showClientSecret ? 'Hide secret' : 'Show secret'}
                       >
-                        {showClientSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showClientSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    {isClientSecretClientId && (
-                      <p className="text-[11px] text-red-500 mt-1 font-medium flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>This looks like a Google Client ID, not a Client Secret. Client secrets in Google Cloud start with "GOCSPX-".</span>
-                      </p>
-                    )}
                   </div>
 
-                  {/* 3. Refresh Token */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        Refresh token
+                  {/* Refresh Token */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Refresh Token
                       </label>
                       <span className="text-[11px] text-gray-400">
-                        {gdriveConfig.has_refresh_token ? '•••••••• (set) — leave blank to keep it.' : 'Paste your 1//04... refresh token'}
+                        {gdriveConfig.has_refresh_token ? '•••••••• (stored)' : 'Paste 1//... token'}
                       </span>
                     </div>
                     <div className="relative">
                       <input
                         type={showRefreshToken ? 'text' : 'password'}
-                        placeholder={gdriveConfig.has_refresh_token ? '•••••••• (set)' : '1//04...'}
+                        placeholder={gdriveConfig.has_refresh_token ? '•••••••• (stored)' : '1//04...'}
                         value={gdriveConfig.refresh_token}
                         onChange={(e) => setGdriveConfig({ ...gdriveConfig, refresh_token: e.target.value })}
-                        className={`w-full h-10 pl-3.5 pr-10 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border ${
+                        className={`w-full h-9 pl-3 pr-9 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border ${
                           isRefreshTokenClientSecret
-                            ? 'border-amber-500 focus:border-amber-500 focus:ring-amber-500/20'
-                            : 'border-gray-200 dark:border-[#3c4043] focus:border-amber-500 focus:ring-amber-500/20'
-                        } text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:ring-2 transition-all`}
+                            ? 'border-amber-500 focus:border-amber-500'
+                            : 'border-gray-200 dark:border-[#3c4043] focus:border-amber-500'
+                        } text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all`}
                       />
                       <button
                         type="button"
@@ -985,75 +946,43 @@ export const StorageSettings: React.FC = () => {
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
                         title={showRefreshToken ? 'Hide token' : 'Show token'}
                       >
-                        {showRefreshToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showRefreshToken ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    {isRefreshTokenClientSecret && (
-                      <p className="text-[11px] text-amber-500 mt-1 font-medium flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>The string starting with "GOCSPX-" is a Client Secret, not a Refresh Token. Refresh tokens start with "1//". Use "1-Click Browser Login" or OAuth Playground to generate one.</span>
-                      </p>
-                    )}
                   </div>
 
-                  {/* 4. Folder ID */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        Folder ID
-                      </label>
-                      <span className="text-[11px] text-gray-400">Blank or "root" = My Drive root.</span>
-                    </div>
+                  {/* Folder ID */}
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Destination Folder ID
+                    </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="e.g. 1EHupLaI-Q8SbuhTaSi9oYrdu... (or leave as 'root')"
+                        placeholder="e.g. 1EHupLaI-Q8SbuhTa... (or leave as 'root')"
                         value={gdriveConfig.folder_id}
                         onChange={(e) => setGdriveConfig({ ...gdriveConfig, folder_id: e.target.value })}
-                        className="flex-1 h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                        className="flex-1 h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                       />
                       <button
                         type="button"
                         disabled={isCreatingFolder || !isGDriveOAuthConnected}
                         onClick={handleCreateGoogleDriveFolder}
-                        className="h-10 px-3.5 rounded-[6px] bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={isGDriveOAuthConnected ? "Create a dedicated 'QuickNotes' folder in your Google Drive automatically" : "Connect Google Drive first to create a folder"}
+                        className="h-9 px-3 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
                       >
                         {isCreatingFolder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Folder className="w-3.5 h-3.5" />}
                         <span>{isCreatingFolder ? 'Creating...' : 'Create Folder'}</span>
                       </button>
                     </div>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                      Note: Under Google security rules, apps can only access folders created by the app. Click <strong>Create Folder</strong> to auto-create a dedicated folder, or enter <code>root</code>.
-                    </p>
                   </div>
 
-                  {/* Action Buttons Bar */}
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSaveConfig('gdrive')}
-                      className="h-9 px-4 rounded-[6px] bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer"
-                    >
-                      Save
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={testingType === 'gdrive'}
-                      onClick={handleSaveAndTestGoogleDrive}
-                      className="h-9 px-4 rounded-[6px] bg-white dark:bg-[#202124] border border-teal-700 dark:border-teal-600 text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 font-semibold text-xs transition-all shadow-xs flex items-center gap-2 cursor-pointer"
-                    >
-                      {testingType === 'gdrive' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      <span>{testingType === 'gdrive' ? 'Testing Connection...' : 'Save & test connection'}</span>
-                    </button>
-
+                  {/* Action Toolbar */}
+                  <div className="pt-2 flex flex-wrap items-center gap-2.5">
                     <button
                       type="button"
                       disabled={isConnectingOAuth || !gdriveConfig.client_id?.trim()}
                       onClick={handleConnectGoogleDrive}
-                      className="h-9 px-3.5 rounded-[6px] bg-gray-100 hover:bg-gray-200 dark:bg-[#2c2d30] dark:hover:bg-[#383a3e] text-gray-700 dark:text-gray-200 font-semibold text-xs transition-all flex items-center gap-2 cursor-pointer"
-                      title="Authorize in browser via Google Popup"
+                      className="h-8.5 px-3.5 rounded-lg border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] hover:bg-gray-50 dark:hover:bg-[#323438] text-gray-800 dark:text-gray-200 text-xs font-medium transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
                     >
                       <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1061,46 +990,47 @@ export const StorageSettings: React.FC = () => {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                       </svg>
-                      <span>{isConnectingOAuth ? 'Connecting...' : '1-Click Browser Login'}</span>
+                      <span>{isConnectingOAuth ? 'Authorizing...' : '1-Click Browser Login'}</span>
                     </button>
 
-                    {/* Inline Test Result Message */}
-                    {testResults['gdrive'] && (
-                      <span className={`text-xs font-semibold flex items-center gap-1.5 ${testResults['gdrive'].success ? 'text-teal-700 dark:text-teal-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {testResults['gdrive'].success ? <Check className="w-3.5 h-3.5 text-teal-600" /> : <X className="w-3.5 h-3.5 text-red-500" />}
-                        <span>{testResults['gdrive'].message}</span>
-                      </span>
-                    )}
+                    <button
+                      type="button"
+                      disabled={testingType === 'gdrive'}
+                      onClick={handleSaveAndTestGoogleDrive}
+                      className="h-8.5 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    >
+                      {testingType === 'gdrive' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      <span>{testingType === 'gdrive' ? 'Testing...' : 'Save & Test Connection'}</span>
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: Service Account JSON View */}
+              {/* TAB 2: Service Account JSON Mode */}
               {gdriveAuthMode === 'service_account' && (
-                <div className="space-y-4 pt-1 text-xs">
+                <div className="space-y-3.5 pt-1 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       Service Account Credentials
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowJsonAutoFill(!showJsonAutoFill)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                      className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
                     >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>{showJsonAutoFill ? 'Hide JSON Auto-Fill' : 'Auto-Fill from Service Account JSON'}</span>
+                      {showJsonAutoFill ? 'Hide JSON Helper' : 'Auto-Fill from .json key file'}
                     </button>
                   </div>
 
                   {showJsonAutoFill && (
-                    <div className="p-4 rounded-[6px] bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/60 space-y-3 animate-fade-in">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="text-xs text-purple-900 dark:text-purple-200 font-medium">
-                          Upload your Google Cloud key <code className="font-mono text-[11px]">.json</code> file or paste JSON text:
-                        </div>
-                        <label className="h-8 px-3 rounded-[6px] bg-purple-100 dark:bg-purple-900/80 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer w-fit">
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>Choose .json file</span>
+                    <div className="p-3.5 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/60 space-y-2.5 animate-fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-purple-900 dark:text-purple-200 font-medium">
+                          Upload key file or paste JSON:
+                        </span>
+                        <label className="h-7 px-2.5 rounded-md bg-white dark:bg-[#202124] border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer">
+                          <Upload className="w-3 h-3" />
+                          <span>Choose .json</span>
                           <input
                             type="file"
                             accept=".json,application/json"
@@ -1118,11 +1048,11 @@ export const StorageSettings: React.FC = () => {
                                         client_email: parsed.client_email,
                                         private_key: parsed.private_key,
                                       }));
-                                      showToast('Extracted Client Email & Private Key from JSON');
+                                      showToast('Populated Client Email & Private Key');
                                       setShowJsonAutoFill(false);
                                       setPastedJson('');
                                     } else {
-                                      showToast('JSON file missing client_email or private_key');
+                                      showToast('JSON missing client_email or private_key');
                                     }
                                   } catch (err) {
                                     showToast('Invalid JSON file format');
@@ -1137,81 +1067,51 @@ export const StorageSettings: React.FC = () => {
                       </div>
                       <textarea
                         rows={3}
-                        placeholder='{"type": "service_account", "client_email": "...", "private_key": "-----BEGIN PRIVATE KEY-----..."}'
+                        placeholder='{"type": "service_account", "client_email": "...", "private_key": "..."}'
                         value={pastedJson}
                         onChange={(e) => setPastedJson(e.target.value)}
-                        className="w-full p-3 rounded-[6px] bg-white dark:bg-[#1a1b1e] border border-purple-200 dark:border-purple-800/80 font-mono text-[11px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                        className="w-full p-2.5 rounded-lg bg-white dark:bg-[#1a1b1e] border border-purple-200/80 dark:border-purple-800/80 font-mono text-[11px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20"
                       />
-                      <div className="flex items-center justify-end">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            try {
-                              const parsed = JSON.parse(pastedJson.trim());
-                              if (parsed.client_email && parsed.private_key) {
-                                setGdriveConfig((prev) => ({
-                                  ...prev,
-                                  client_email: parsed.client_email,
-                                  private_key: parsed.private_key,
-                                }));
-                                showToast('Extracted Client Email & Private Key from JSON');
-                                setShowJsonAutoFill(false);
-                                setPastedJson('');
-                              } else {
-                                showToast('JSON missing client_email or private_key');
-                              }
-                            } catch (err) {
-                              showToast('Invalid JSON syntax');
-                            }
-                          }}
-                          className="h-8 px-3.5 rounded-[6px] bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-all cursor-pointer"
-                        >
-                          Extract & Populate Fields
-                        </button>
-                      </div>
                     </div>
                   )}
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Client Email (Service Account Email)
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Client Email
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. saved-notes@my-project.iam.gserviceaccount.com"
+                      placeholder="e.g. my-app@project.iam.gserviceaccount.com"
                       value={gdriveConfig.client_email}
                       onChange={(e) => setGdriveConfig({ ...gdriveConfig, client_email: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                      className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Private Key (RSA Private Key)
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Private Key
                     </label>
                     <textarea
-                      rows={4}
-                      placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...&#10;-----END PRIVATE KEY-----"
+                      rows={3}
+                      placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
                       value={gdriveConfig.private_key}
                       onChange={(e) => setGdriveConfig({ ...gdriveConfig, private_key: e.target.value })}
-                      className="w-full p-3 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-[11px] focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all leading-normal"
+                      className="w-full p-2.5 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-[11px] focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all leading-normal"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Google Drive Folder ID (Destination Folder)
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Google Drive Folder ID
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j (or leave as 'root')"
+                      placeholder="e.g. 1a2b3c4d... (or 'root')"
                       value={gdriveConfig.folder_id}
                       onChange={(e) => setGdriveConfig({ ...gdriveConfig, folder_id: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-[6px] bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                      className="w-full h-9 px-3 rounded-lg bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-gray-900 dark:text-gray-100 placeholder-gray-400 font-mono text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     />
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      Tip: Open the folder in Google Drive and copy the ID from the URL: <code className="font-mono text-[10px]">drive.google.com/drive/folders/<strong>[FOLDER_ID]</strong></code>. Share that folder with your Service Account Email.
-                    </p>
                   </div>
                 </div>
               )}

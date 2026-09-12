@@ -3,8 +3,6 @@ import {
   Archive,
   Download,
   RotateCcw,
-  CheckCircle2,
-  AlertCircle,
   Trash2,
   ShieldCheck,
   UploadCloud,
@@ -19,6 +17,9 @@ import {
   Calendar,
   Play,
   Save,
+  RefreshCw,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { BackupRecord, BackupScheduleConfig } from '../../types';
 import * as api from '../../api/client';
@@ -28,6 +29,7 @@ export const BackupSettings: React.FC = () => {
   const { isOwner, showToast, loadNotes, loadTags, openConfirmDialog } = useNotes();
   const [backups, setBackups] = useState<BackupRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Manual Backup wizard state
   const [backupType, setBackupType] = useState<'database_only' | 'full'>('database_only');
@@ -50,6 +52,9 @@ export const BackupSettings: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Copied checksum tracking
+  const [copiedChecksumId, setCopiedChecksumId] = useState<string | null>(null);
+
   const loadBackupsAndSchedule = async () => {
     try {
       setLoading(true);
@@ -70,6 +75,19 @@ export const BackupSettings: React.FC = () => {
       showToast('Failed to load backups or schedule configuration');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefreshStorage = async () => {
+    try {
+      setIsRefreshing(true);
+      const data = await api.fetchBackups();
+      setBackups(data);
+      showToast(`Storage verified (${data.length} backup archive${data.length === 1 ? '' : 's'} on storage)`);
+    } catch (err: any) {
+      showToast('Failed to sync storage backups');
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -95,7 +113,7 @@ export const BackupSettings: React.FC = () => {
       const res = await api.createBackup(selectedStorage, backupType);
       const sizeStr = formatBytes(res.backup?.fileSize || res.backup?.file_size || 0);
       showToast(`Backup created successfully (${backupType === 'database_only' ? 'Database Only' : 'Full Backup'}, ${sizeStr})`);
-      loadBackupsAndSchedule();
+      await loadBackupsAndSchedule();
     } catch (err: any) {
       showToast(err.message || 'Failed to create backup');
     } finally {
@@ -127,7 +145,7 @@ export const BackupSettings: React.FC = () => {
       setIsRunningScheduleNow(true);
       const res = await api.runBackupScheduleNow();
       showToast(res.message || 'Scheduled backup executed');
-      loadBackupsAndSchedule();
+      await loadBackupsAndSchedule();
     } catch (err: any) {
       showToast(err.message || 'Failed to run scheduled backup');
     } finally {
@@ -140,7 +158,7 @@ export const BackupSettings: React.FC = () => {
       setIsVerifyingId(id);
       const res = await api.verifyBackup(id);
       showToast(`Backup verified: SHA-256 matches (${res.valid !== false ? 'VALID' : 'INVALID'})`);
-      loadBackupsAndSchedule();
+      await loadBackupsAndSchedule();
     } catch (err: any) {
       showToast(err.message || 'Backup verification failed');
     } finally {
@@ -187,7 +205,7 @@ export const BackupSettings: React.FC = () => {
           showToast(res.message || 'Uploaded backup restored successfully');
           await loadNotes();
           await loadTags();
-          loadBackupsAndSchedule();
+          await loadBackupsAndSchedule();
         } catch (err: any) {
           showToast(err.message || 'Failed to restore uploaded backup');
         } finally {
@@ -201,14 +219,14 @@ export const BackupSettings: React.FC = () => {
   const handleDeleteBackup = (id: string) => {
     openConfirmDialog({
       title: 'Delete Backup',
-      message: 'Are you sure you want to delete this backup archive? This action cannot be undone.',
+      message: 'Are you sure you want to delete this backup archive from storage? This action cannot be undone.',
       confirmText: 'Delete Backup',
       isDestructive: true,
       onConfirm: async () => {
         try {
           await api.deleteBackup(id);
-          showToast('Backup deleted');
-          loadBackupsAndSchedule();
+          showToast('Backup deleted from storage');
+          await loadBackupsAndSchedule();
         } catch (err: any) {
           showToast(err.message || 'Failed to delete backup');
         }
@@ -226,6 +244,13 @@ export const BackupSettings: React.FC = () => {
     }
   };
 
+  const handleCopyChecksum = (id: string, checksum: string) => {
+    navigator.clipboard.writeText(checksum);
+    setCopiedChecksumId(id);
+    showToast('SHA-256 checksum copied');
+    setTimeout(() => setCopiedChecksumId(null), 2500);
+  };
+
   const formatBytes = (bytes: number) => {
     if (!bytes || bytes === 0) return '0 B';
     const k = 1024;
@@ -235,67 +260,75 @@ export const BackupSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Archive className="w-5 h-5 text-amber-500" />
-          Backups & Disaster Recovery
-        </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Create on-demand snapshots, schedule automated recurring backups, and restore database records.
-        </p>
-      </div>
-
+    <div className="space-y-5 animate-fade-in">
       {/* 1. On-Demand Backup Creator Card */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] space-y-4 shadow-xs">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
-            Create On-Demand Backup
-          </h3>
+      <div className="p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                Create On-Demand Backup
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Generate an immediate snapshot and save it to your selected destination.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Scope: Database Only vs Full Backup */}
-        <div className="space-y-2">
+        <div className="space-y-2 pt-1">
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-            Backup Scope
+            Archive Scope
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setBackupType('database_only')}
-              className={`p-3.5 rounded-[6px] border text-left transition-all cursor-pointer ${
+              className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
                 backupType === 'database_only'
-                  ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 ring-2 ring-emerald-400/20'
-                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50 dark:bg-[#1a1b1e] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#323438]'
+                  ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-gray-900 dark:text-white ring-1 ring-amber-500'
+                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f]'
               }`}
             >
-              <div className="font-bold flex items-center gap-1.5 mb-1 text-emerald-700 dark:text-emerald-300 text-xs">
-                <Database className="w-4 h-4" />
-                <span>⚡ Database Only (Fast)</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2 font-semibold text-xs text-gray-900 dark:text-gray-100">
+                  <Database className="w-4 h-4 text-amber-500" />
+                  <span>Database Snapshot (Fast)</span>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                  ~1s
+                </span>
               </div>
-              <div className="text-[11px] text-gray-500 dark:text-gray-400 leading-normal">
-                Instant snapshot (~1s). Exports notes, checklists, tags, users, and cloud attachment pointers.
-              </div>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                Backs up notes, checklists, nested tags, accounts, and cloud attachment pointers.
+              </p>
             </button>
 
             <button
               type="button"
               onClick={() => setBackupType('full')}
-              className={`p-3.5 rounded-[6px] border text-left transition-all cursor-pointer ${
+              className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
                 backupType === 'full'
-                  ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 ring-2 ring-amber-400/20'
-                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50 dark:bg-[#1a1b1e] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#323438]'
+                  ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-gray-900 dark:text-white ring-1 ring-amber-500'
+                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f]'
               }`}
             >
-              <div className="font-bold flex items-center gap-1.5 mb-1 text-amber-700 dark:text-amber-300 text-xs">
-                <Layers className="w-4 h-4" />
-                <span>📦 Full Snapshot (DB + Files)</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2 font-semibold text-xs text-gray-900 dark:text-gray-100">
+                  <Layers className="w-4 h-4 text-amber-500" />
+                  <span>Full Archive (Database + Media)</span>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                  Complete
+                </span>
               </div>
-              <div className="text-[11px] text-gray-500 dark:text-gray-400 leading-normal">
-                Complete archive bundling the full database plus all local images, documents, and thumbnails.
-              </div>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                Bundles database records with all locally stored image files, documents, and thumbnails.
+              </p>
             </button>
           </div>
         </div>
@@ -305,190 +338,182 @@ export const BackupSettings: React.FC = () => {
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             Storage Destination
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <button
               type="button"
               onClick={() => setSelectedStorage('local')}
-              className={`p-3.5 rounded-[6px] border text-left transition-all cursor-pointer ${
+              className={`h-10 px-3.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                 selectedStorage === 'local'
-                  ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 ring-2 ring-amber-400/20'
-                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50 dark:bg-[#1a1b1e] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#323438]'
+                  ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-gray-900 dark:text-white ring-1 ring-amber-500'
+                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f]'
               }`}
             >
-              <div className="font-bold flex items-center gap-1.5 mb-0.5 text-xs text-gray-900 dark:text-gray-100">
-                <HardDrive className="w-4 h-4 text-amber-500" />
-                Local Disk
+              <div className="flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <span className="text-xs font-medium">Local Disk</span>
               </div>
-              <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                Saved to <code className="font-mono text-[10px]">./backups</code>
-              </div>
+              <code className="text-[10px] text-gray-400 font-mono">./backups</code>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedStorage('s3')}
-              className={`p-3.5 rounded-[6px] border text-left transition-all cursor-pointer ${
+              className={`h-10 px-3.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                 selectedStorage === 's3'
-                  ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-400/20'
-                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50 dark:bg-[#1a1b1e] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#323438]'
+                  ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-gray-900 dark:text-white ring-1 ring-amber-500'
+                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f]'
               }`}
             >
-              <div className="font-bold flex items-center gap-1.5 mb-0.5 text-xs text-gray-900 dark:text-gray-100">
-                <Cloud className="w-4 h-4 text-blue-500" />
-                S3 / R2 / B2
+              <div className="flex items-center gap-2">
+                <Cloud className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <span className="text-xs font-medium">S3 / R2 / B2</span>
               </div>
-              <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                Uploaded to S3 bucket
-              </div>
+              <span className="text-[10px] text-gray-400">Cloud Bucket</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedStorage('gdrive')}
-              className={`p-3.5 rounded-[6px] border text-left transition-all cursor-pointer ${
+              className={`h-10 px-3.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                 selectedStorage === 'gdrive'
-                  ? 'border-purple-500 bg-purple-50/70 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200 ring-2 ring-purple-400/20'
-                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50 dark:bg-[#1a1b1e] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#323438]'
+                  ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-gray-900 dark:text-white ring-1 ring-amber-500'
+                  : 'border-gray-200 dark:border-[#3c4043] bg-gray-50/50 dark:bg-[#1f2023] text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-[#2a2b2f]'
               }`}
             >
-              <div className="font-bold flex items-center gap-1.5 mb-0.5 text-xs text-gray-900 dark:text-gray-100">
-                <Cloud className="w-4 h-4 text-purple-500" />
-                Google Drive
+              <div className="flex items-center gap-2">
+                <Cloud className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                <span className="text-xs font-medium">Google Drive</span>
               </div>
-              <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                Uploaded to Google Drive
-              </div>
+              <span className="text-[10px] text-gray-400">Cloud Drive</span>
             </button>
           </div>
         </div>
 
+        {/* Footer info & trigger button */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-[#3c4043]">
           <div className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-            <FileCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-            <span>Includes automated SHA-256 checksum integrity verification.</span>
+            <FileCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+            <span>Includes automated SHA-256 integrity verification upon creation.</span>
           </div>
 
           <button
             type="button"
             disabled={isBackingUp}
             onClick={handleCreateBackup}
-            className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
+            className="h-8.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-2 cursor-pointer self-stretch sm:self-auto justify-center disabled:opacity-60"
           >
-            {isBackingUp ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-            <span>{isBackingUp ? 'Creating & Verifying...' : 'Run Backup Now'}</span>
+            {isBackingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+            <span>{isBackingUp ? 'Generating Snapshot...' : 'Run Backup Now'}</span>
           </button>
         </div>
       </div>
 
       {/* 2. Automated Scheduled Backups Card */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] space-y-4 shadow-xs">
+      <div className="p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] space-y-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-500" />
-            <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
-              Automated Scheduled Backups
-            </h3>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                Automated Scheduled Backups
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Background recurring snapshots with automated retention pruning.
+              </p>
+            </div>
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer gap-2">
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {scheduleEnabled ? 'Active' : 'Disabled'}
+            </span>
             <input
               type="checkbox"
               checked={scheduleEnabled}
               onChange={(e) => setScheduleEnabled(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-[6px] peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-[6px] after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
-            <span className="ml-2 text-xs font-bold text-gray-700 dark:text-gray-300">
-              {scheduleEnabled ? 'Enabled' : 'Disabled'}
-            </span>
+            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[18px] peer-checked:after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-amber-600"></div>
           </label>
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Automatically generate backups on a recurring schedule in the background with automated retention pruning.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-1">
-          {/* Interval */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              Backup Frequency
+        {/* 4 Inputs Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+              Frequency
             </label>
             <select
               value={scheduleIntervalDays}
               onChange={(e) => setScheduleIntervalDays(parseInt(e.target.value, 10))}
-              className="w-full h-10 px-3 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-800 dark:text-gray-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
+              className="w-full h-9 px-3 bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
             >
-              <option value={1}>Daily (Every 1 day)</option>
+              <option value={1}>Daily (Every 24h)</option>
               <option value={2}>Every 2 days</option>
               <option value={3}>Every 3 days</option>
-              <option value={4}>Every 4 days</option>
-              <option value={5}>Every 5 days</option>
-              <option value={6}>Every 6 days</option>
               <option value={7}>Weekly (Every 7 days)</option>
-              <option value={14}>Every 14 days</option>
+              <option value={14}>Bi-weekly (Every 14 days)</option>
               <option value={30}>Monthly (Every 30 days)</option>
             </select>
           </div>
 
-          {/* Type */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              Scheduled Type
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+              Snapshot Type
             </label>
             <select
               value={scheduleBackupType}
               onChange={(e) => setScheduleBackupType(e.target.value as any)}
-              className="w-full h-10 px-3 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-800 dark:text-gray-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
+              className="w-full h-9 px-3 bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
             >
-              <option value="database_only">⚡ Database Only</option>
-              <option value="full">📦 Full (DB + Files)</option>
+              <option value="database_only">Database Snapshot</option>
+              <option value="full">Full Archive (DB + Media)</option>
             </select>
           </div>
 
-          {/* Storage */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              Destination
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+              Storage Destination
             </label>
             <select
               value={scheduleStorage}
               onChange={(e) => setScheduleStorage(e.target.value as any)}
-              className="w-full h-10 px-3 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-800 dark:text-gray-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
+              className="w-full h-9 px-3 bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
             >
-              <option value="local">Local Disk</option>
-              <option value="s3">S3 / R2 / B2</option>
+              <option value="local">Local Disk (./backups)</option>
+              <option value="s3">S3 / R2 / B2 Cloud</option>
               <option value="gdrive">Google Drive</option>
             </select>
           </div>
 
-          {/* Retention */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
               Retention Limit
             </label>
             <select
               value={scheduleRetention}
               onChange={(e) => setScheduleRetention(parseInt(e.target.value, 10))}
-              className="w-full h-10 px-3 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-800 dark:text-gray-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
+              className="w-full h-9 px-3 bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
             >
-              <option value={3}>Keep last 3 backups</option>
-              <option value={7}>Keep last 7 backups</option>
-              <option value={14}>Keep last 14 backups</option>
-              <option value={30}>Keep last 30 backups</option>
+              <option value={3}>Keep last 3 archives</option>
+              <option value={7}>Keep last 7 archives</option>
+              <option value={14}>Keep last 14 archives</option>
+              <option value={30}>Keep last 30 archives</option>
               <option value={0}>Keep all (No pruning)</option>
             </select>
           </div>
         </div>
 
-        {/* Schedule Timing & Status Bar */}
+        {/* Schedule Timing & Actions Bar */}
         {schedule && (
-          <div className="p-3.5 bg-gray-50 dark:bg-[#1a1b1e] rounded-[6px] border border-gray-200/80 dark:border-[#3c4043] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-gray-600 dark:text-gray-300">
+          <div className="p-3 bg-gray-50/70 dark:bg-[#1f2023] rounded-lg border border-gray-200/70 dark:border-[#3c4043] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-gray-600 dark:text-gray-300">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5 text-amber-500" />
                 <span>
-                  <strong>Next Run:</strong>{' '}
+                  <strong>Next Scheduled Run:</strong>{' '}
                   {schedule.enabled && schedule.next_run_at
                     ? new Date(schedule.next_run_at).toLocaleString()
                     : 'Disabled'}
@@ -496,7 +521,7 @@ export const BackupSettings: React.FC = () => {
               </div>
               {schedule.last_run_at && (
                 <div className="text-[11px] text-gray-400">
-                  Last Ran: {new Date(schedule.last_run_at).toLocaleString()} (Status: {schedule.last_status || 'ok'})
+                  Last Executed: {new Date(schedule.last_run_at).toLocaleString()} (Status: {schedule.last_status || 'ok'})
                 </div>
               )}
             </div>
@@ -505,10 +530,9 @@ export const BackupSettings: React.FC = () => {
               type="button"
               disabled={isRunningScheduleNow}
               onClick={handleRunScheduleNow}
-              title="Execute scheduled backup right now"
-              className="h-8 px-3 rounded-[6px] bg-white dark:bg-[#28292c] border border-gray-200 dark:border-[#3c4043] hover:bg-gray-50 dark:hover:bg-[#323438] text-gray-700 dark:text-gray-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="h-8 px-3 rounded-lg bg-white dark:bg-[#28292c] border border-gray-200 dark:border-[#3c4043] hover:bg-gray-50 dark:hover:bg-[#323438] text-gray-700 dark:text-gray-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-60"
             >
-              {isRunningScheduleNow ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 text-amber-500" />}
+              {isRunningScheduleNow ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 text-amber-500" />}
               <span>Run Schedule Now</span>
             </button>
           </div>
@@ -519,25 +543,25 @@ export const BackupSettings: React.FC = () => {
             type="button"
             disabled={isSavingSchedule}
             onClick={handleSaveSchedule}
-            className="h-10 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="h-8.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
           >
-            {isSavingSchedule ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>Save Schedule Settings</span>
+            {isSavingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span>Save Schedule</span>
           </button>
         </div>
       </div>
 
-      {/* 3. Restore from External File */}
-      <div className="p-5 rounded-[6px] border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#28292c] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 3. External Archive Upload / Restore Card */}
+      <div className="p-4 sm:p-5 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <UploadCloud className="w-4 h-4 text-blue-500" />
             <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
-              Restore from External Archive File
+              Restore from External Archive
             </h3>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Upload any previously generated QuickNotes backup <code className="font-mono text-[11px]">.zip</code> file to restore data state.
+            Upload any previously generated QuickNotes backup <code className="font-mono text-[11px]">.zip</code> file to restore notes and settings.
           </p>
         </div>
 
@@ -553,109 +577,138 @@ export const BackupSettings: React.FC = () => {
             type="button"
             disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
-            className="h-10 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="h-8.5 px-3.5 bg-white dark:bg-[#28292c] hover:bg-gray-50 dark:hover:bg-[#323438] border border-gray-200 dark:border-[#3c4043] text-gray-800 dark:text-gray-200 rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-60"
           >
-            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+            {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5 text-blue-500" />}
             <span>{isUploading ? 'Restoring Archive...' : 'Upload & Restore (.zip)'}</span>
           </button>
         </div>
       </div>
 
-      {/* 4. Backup History Table */}
-      <div className="space-y-3">
-        <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Archive className="w-4 h-4 text-amber-500" />
-          <span>Backup History ({backups.length})</span>
-        </h3>
+      {/* 4. Backup History / Storage-Verified Backups Table */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Archive className="w-4 h-4 text-amber-500" />
+            <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
+              Verified Backups on Storage
+            </h3>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-[#1f2023] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#3c4043]">
+              {backups.length}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            disabled={isRefreshing}
+            onClick={handleRefreshStorage}
+            title="Scan physical storage and re-verify archives"
+            className="h-7 px-2.5 rounded-md bg-gray-100 hover:bg-gray-200/80 dark:bg-[#28292c] dark:hover:bg-[#323438] text-gray-600 dark:text-gray-300 text-[11px] font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-amber-500' : ''}`} />
+            <span>Verify Storage</span>
+          </button>
+        </div>
 
         {loading ? (
-          <div className="py-8 text-center text-gray-400 text-xs font-medium animate-pulse">Loading backups...</div>
+          <div className="py-12 text-center text-gray-400 text-xs font-medium animate-pulse flex flex-col items-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+            <span>Verifying storage archives...</span>
+          </div>
         ) : backups.length === 0 ? (
-          <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-[#3c4043] rounded-[6px]">
-            <Archive className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-xs text-gray-400 font-medium">No backups generated yet.</p>
+          <div className="p-8 text-center border border-dashed border-gray-200 dark:border-[#3c4043] rounded-xl bg-gray-50/50 dark:bg-[#1f2023]/40 space-y-2">
+            <Archive className="w-8 h-8 text-gray-400 mx-auto" />
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              No backups currently found on physical storage
+            </p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 max-w-sm mx-auto">
+              Any deleted or missing archives have been pruned. Use <strong>Run Backup Now</strong> above to generate a fresh verified snapshot.
+            </p>
           </div>
         ) : (
-          <div className="bg-white dark:bg-[#28292c] rounded-[6px] border border-gray-200 dark:border-[#3c4043] overflow-hidden shadow-xs">
+          <div className="bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="min-w-[640px] w-full text-left text-xs">
-                <thead className="bg-gray-50/80 dark:bg-[#202124] border-b border-gray-200 dark:border-[#3c4043] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider text-[11px]">
+              <table className="min-w-[680px] w-full text-left text-xs">
+                <thead className="bg-gray-50/70 dark:bg-[#1f2023] border-b border-gray-200/80 dark:border-[#3c4043] text-gray-500 dark:text-gray-400 font-medium text-[11px]">
                   <tr>
-                    <th className="px-5 py-3.5">Backup File</th>
-                    <th className="px-5 py-3.5">Scope</th>
-                    <th className="px-5 py-3.5">Storage</th>
-                    <th className="px-5 py-3.5">Size</th>
-                    <th className="px-5 py-3.5">Integrity</th>
-                    <th className="px-5 py-3.5">Created</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
+                    <th className="px-4 py-3">Archive File</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Storage</th>
+                    <th className="px-4 py-3">Size</th>
+                    <th className="px-4 py-3">Checksum</th>
+                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-[#3c4043]">
                   {backups.map((b) => {
                     const isDbOnly = b.backup_type === 'database_only' || b.includes_attachments === false;
+                    const shortSha = b.checksum_sha256 ? `${b.checksum_sha256.substring(0, 8)}...` : 'N/A';
                     return (
                       <tr key={b.id} className="hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors">
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3.5">
                           <a
                             href={api.getBackupDownloadUrl(b.id)}
                             download={b.filename}
                             onClick={(e) => handleDownloadBackup(e, b)}
                             title={`Download ${b.filename}`}
-                            className="inline-flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs cursor-pointer group"
+                            className="inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-gray-100 hover:text-amber-600 dark:hover:text-amber-400 font-mono text-xs cursor-pointer group"
                           >
-                            <Download className="w-3.5 h-3.5 text-blue-500 group-hover:translate-y-0.5 transition-transform flex-shrink-0" />
-                            <span>{b.filename}</span>
+                            <Download className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-500 group-hover:translate-y-0.5 transition-all flex-shrink-0" />
+                            <span className="truncate max-w-[200px]">{b.filename}</span>
                           </a>
-                          <div className="text-[10px] text-gray-400 dark:text-gray-500 font-mono mt-0.5 truncate max-w-xs">
-                            SHA256: {b.checksum_sha256}
-                          </div>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3.5">
                           <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${
                               isDbOnly
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                                : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60'
+                                : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/60'
                             }`}
                           >
                             {isDbOnly ? <Database className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
-                            <span>{isDbOnly ? 'Database Only' : 'Full Snapshot'}</span>
+                            <span>{isDbOnly ? 'Database' : 'Full Snapshot'}</span>
                           </span>
                         </td>
-                        <td className="px-5 py-4 uppercase font-bold text-[11px] text-gray-600 dark:text-gray-300 font-mono">
-                          {b.storage_provider}
+                        <td className="px-4 py-3.5">
+                          <span className="uppercase text-[10px] font-mono font-semibold text-gray-600 dark:text-gray-300">
+                            {b.storage_provider}
+                          </span>
                         </td>
-                        <td className="px-5 py-4 font-mono text-gray-500 dark:text-gray-400 text-[11px]">
+                        <td className="px-4 py-3.5 font-mono text-gray-600 dark:text-gray-300 text-[11px]">
                           {formatBytes(b.file_size)}
                         </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              b.is_verified
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                                : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                            }`}
+                        <td className="px-4 py-3.5">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyChecksum(b.id, b.checksum_sha256)}
+                            title="Click to copy full SHA-256 checksum"
+                            className="inline-flex items-center gap-1 font-mono text-[10px] text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-[#1a1b1e] border border-gray-200/60 dark:border-[#3c4043] cursor-pointer transition-colors"
                           >
-                            {b.is_verified ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                            <span>{b.is_verified ? 'Verified' : 'Unverified'}</span>
-                          </span>
+                            {copiedChecksumId === b.id ? (
+                              <Check className="w-3 h-3 text-emerald-500" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                            <span>{shortSha}</span>
+                          </button>
                         </td>
-                        <td className="px-5 py-4 text-gray-500 dark:text-gray-400 text-[11px]">
-                          {new Date(b.created_at).toLocaleString()}
+                        <td className="px-4 py-3.5 text-gray-500 dark:text-gray-400 text-[11px]">
+                          {new Date(b.created_at).toLocaleDateString()} {new Date(b.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </td>
-                        <td className="px-5 py-4 text-right">
+                        <td className="px-4 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
                               disabled={isVerifyingId === b.id}
                               onClick={() => handleVerifyBackup(b.id)}
-                              title="Re-verify backup checksum"
-                              className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-emerald-500 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
+                              title="Re-verify checksum integrity"
+                              className="w-7 h-7 rounded-md text-gray-400 hover:text-emerald-500 hover:bg-gray-100 dark:hover:bg-[#35363a] transition-colors flex items-center justify-center cursor-pointer"
                             >
                               {isVerifyingId === b.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
                               ) : (
-                                <ShieldCheck className="w-4 h-4" />
+                                <ShieldCheck className="w-3.5 h-3.5" />
                               )}
                             </button>
 
@@ -663,9 +716,9 @@ export const BackupSettings: React.FC = () => {
                               type="button"
                               onClick={(e) => handleDownloadBackup(e, b)}
                               title={`Download ${b.filename}`}
-                              className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
+                              className="w-7 h-7 rounded-md text-gray-400 hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-[#35363a] transition-colors flex items-center justify-center cursor-pointer"
                             >
-                              <Download className="w-4 h-4" />
+                              <Download className="w-3.5 h-3.5" />
                             </button>
 
                             <button
@@ -673,22 +726,22 @@ export const BackupSettings: React.FC = () => {
                               disabled={isRestoringId === b.id}
                               onClick={() => handleRestoreBackup(b)}
                               title="Restore from this backup"
-                              className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-amber-500 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
+                              className="w-7 h-7 rounded-md text-gray-400 hover:text-amber-500 hover:bg-gray-100 dark:hover:bg-[#35363a] transition-colors flex items-center justify-center cursor-pointer"
                             >
                               {isRestoringId === b.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" />
                               ) : (
-                                <RotateCcw className="w-4 h-4" />
+                                <RotateCcw className="w-3.5 h-3.5" />
                               )}
                             </button>
 
                             <button
                               type="button"
                               onClick={() => handleDeleteBackup(b.id)}
-                              title="Delete backup"
-                              className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center cursor-pointer"
+                              title="Delete backup archive"
+                              className="w-7 h-7 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center cursor-pointer"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -706,3 +759,4 @@ export const BackupSettings: React.FC = () => {
 };
 
 export default BackupSettings;
+

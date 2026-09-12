@@ -102,10 +102,116 @@ export async function migrate() {
       console.log(`Initialized default accounts: "${ownerUsername}" (owner) and "${apiUsername}" (api).`);
     }
 
+    // Ensure default 2-step nested labels hierarchy exists
+    await ensureDefaultLabels();
+
     console.log('Database schema successfully migrated.');
   } catch (error) {
     console.error('Database migration failed:', error);
     throw error;
+  }
+}
+
+export const DEFAULT_LABEL_TREE: {
+  name: string;
+  color: string;
+  children: string[];
+}[] = [
+  {
+    name: 'Personal',
+    color: 'storm',
+    children: ['Wisdom', 'Self improvement', 'Spiritual', 'Orqanise-Declutter', 'Study'],
+  },
+  {
+    name: 'Health',
+    color: 'blossom',
+    children: ['Diabetes', 'Exercise'],
+  },
+  {
+    name: 'Recipe',
+    color: 'coral',
+    children: ['masala'],
+  },
+  {
+    name: 'AI',
+    color: 'mint',
+    children: ['claude', 'AI Agent'],
+  },
+  {
+    name: 'Relationships',
+    color: 'sand',
+    children: ['Partner', 'Kids'],
+  },
+  {
+    name: 'Books',
+    color: 'storm',
+    children: [],
+  },
+  {
+    name: 'Github',
+    color: 'fog',
+    children: [],
+  },
+  {
+    name: 'Business',
+    color: 'mint',
+    children: ['Local seo', 'Employees'],
+  },
+  {
+    name: 'Finance',
+    color: 'amber',
+    children: ['Trading'],
+  },
+];
+
+export async function ensureDefaultLabels() {
+  for (let rootIndex = 0; rootIndex < DEFAULT_LABEL_TREE.length; rootIndex++) {
+    const rootDef = DEFAULT_LABEL_TREE[rootIndex];
+
+    // Check if root label exists
+    const rootRes = await query(
+      'SELECT id, name FROM tags WHERE parent_id IS NULL AND LOWER(name) = LOWER($1)',
+      [rootDef.name]
+    );
+
+    let rootId: string;
+    if (rootRes.rows.length === 0) {
+      const insRes = await query(
+        'INSERT INTO tags (name, parent_id, color, sort_order) VALUES ($1, NULL, $2, $3) RETURNING id',
+        [rootDef.name, rootDef.color, rootIndex]
+      );
+      rootId = insRes.rows[0].id;
+    } else {
+      rootId = rootRes.rows[0].id;
+      await query('UPDATE tags SET sort_order = $1 WHERE id = $2', [rootIndex, rootId]);
+    }
+
+    // Process children
+    for (let childIndex = 0; childIndex < rootDef.children.length; childIndex++) {
+      const childName = rootDef.children[childIndex];
+
+      // Handle Organise-Declutter -> Orqanise-Declutter if previously created with a 'g'
+      if (childName === 'Orqanise-Declutter') {
+        await query(
+          "UPDATE tags SET name = 'Orqanise-Declutter' WHERE parent_id = $1 AND LOWER(name) = 'organise-declutter'",
+          [rootId]
+        );
+      }
+
+      const childRes = await query(
+        'SELECT id FROM tags WHERE parent_id = $1 AND LOWER(name) = LOWER($2)',
+        [rootId, childName]
+      );
+
+      if (childRes.rows.length === 0) {
+        await query(
+          'INSERT INTO tags (name, parent_id, color, sort_order) VALUES ($1, $2, $3, $4)',
+          [childName, rootId, rootDef.color, childIndex]
+        );
+      } else {
+        await query('UPDATE tags SET sort_order = $1 WHERE id = $2', [childIndex, childRes.rows[0].id]);
+      }
+    }
   }
 }
 

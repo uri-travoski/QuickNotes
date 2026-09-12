@@ -9,6 +9,7 @@ import {
   X,
   Palette,
   ChevronDown,
+  Check,
 } from 'lucide-react';
 import { Tag } from '../../types';
 import * as api from '../../api/client';
@@ -26,6 +27,7 @@ export const LabelSettings: React.FC = () => {
   const [newRootName, setNewRootName] = useState('');
   const [newRootColor, setNewRootColor] = useState(() => getAutoPickedColor(tagTree.length));
   const [isNewColorPickerOpen, setIsNewColorPickerOpen] = useState(false);
+  const [isCreatingRoot, setIsCreatingRoot] = useState(false);
 
   // Sub-label creation state
   const [addingSubForRootId, setAddingSubForRootId] = useState<string | null>(null);
@@ -34,11 +36,12 @@ export const LabelSettings: React.FC = () => {
   // Inline color picker popover state for existing parent labels
   const [activeColorPickerRootId, setActiveColorPickerRootId] = useState<string | null>(null);
 
-  // Editing label state
-  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  // Inline Editing label state (replaces modal-in-modal anti-pattern)
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editParentId, setEditParentId] = useState<string | null>(null);
   const [editColor, setEditColor] = useState('blue');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const newColorRef = useRef<HTMLDivElement>(null);
   const inlineColorRef = useRef<HTMLDivElement>(null);
@@ -67,6 +70,7 @@ export const LabelSettings: React.FC = () => {
     if (!newRootName.trim()) return;
 
     try {
+      setIsCreatingRoot(true);
       await api.createTag(newRootName.trim(), null, newRootColor);
       setNewRootName('');
       setNewRootColor(getAutoPickedColor(tagTree.length + 1));
@@ -75,6 +79,8 @@ export const LabelSettings: React.FC = () => {
       showToast('Root label created');
     } catch (err: any) {
       showToast(err.message || 'Failed to create label');
+    } finally {
+      setIsCreatingRoot(false);
     }
   };
 
@@ -103,17 +109,34 @@ export const LabelSettings: React.FC = () => {
     }
   };
 
-  const handleUpdateTag = async (e: React.FormEvent) => {
+  const startEditing = (tag: Tag) => {
+    setEditingTagId(tag.id);
+    setEditName(tag.name);
+    setEditParentId(tag.parent_id || null);
+    setEditColor(tag.color || 'blue');
+    setAddingSubForRootId(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingTagId(null);
+    setEditName('');
+    setEditParentId(null);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTag || !editName.trim()) return;
+    if (!editingTagId || !editName.trim()) return;
 
     try {
-      await api.updateTag(editingTag.id, editName.trim(), editParentId, editColor);
-      setEditingTag(null);
+      setIsSavingEdit(true);
+      await api.updateTag(editingTagId, editName.trim(), editParentId, editColor);
+      setEditingTagId(null);
       loadTags();
       showToast('Label updated');
     } catch (err: any) {
       showToast(err.message || 'Failed to update label');
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -144,171 +167,221 @@ export const LabelSettings: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="pb-4 border-b border-gray-100 dark:border-[#3c4043]">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <TagIcon className="w-5 h-5 text-amber-500" />
-          Labels Management
+        <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <TagIcon className="w-4.5 h-4.5 text-amber-500" />
+          Labels & Taxonomy
         </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Create top-level root categories and nested sub-labels. Sub-labels automatically inherit a lighter tint of the parent color.
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Organize your notes into root categories and nested sub-labels with automatic color tint inheritance.
         </p>
       </div>
 
       {/* Quick Add Root Label Bar */}
-      <form onSubmit={handleCreateRoot} className="flex items-center gap-2.5 relative">
-        <div className="relative" ref={newColorRef}>
-          <button
-            type="button"
-            onClick={() => setIsNewColorPickerOpen(!isNewColorPickerOpen)}
-            title="Pick label color"
-            className="h-10 px-3 bg-white dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] hover:bg-gray-50 dark:hover:bg-[#28292c] transition-all flex items-center gap-2 cursor-pointer shadow-xs"
-          >
-            <span
-              className="w-4 h-4 rounded-full shadow-xs flex-shrink-0"
-              style={{ backgroundColor: getLabelDotColors(newRootColor).parent }}
-            />
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-          </button>
-
-          {isNewColorPickerOpen && (
-            <div className="absolute top-full left-0 mt-2 p-3.5 w-60 bg-white dark:bg-[#28292c] rounded-[6px] shadow-keep-modal border border-gray-200 dark:border-[#3c4043] z-50 animate-scale-in">
-              <span className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-2">
-                Select Label Color
-              </span>
-              <LabelColorPicker
-                selectedColor={newRootColor}
-                onSelectColor={(colorId) => {
-                  setNewRootColor(colorId);
-                  setIsNewColorPickerOpen(false);
-                }}
-                showPreview={true}
-              />
-            </div>
-          )}
+      <div className="p-4 rounded-xl border border-gray-200/80 dark:border-[#3c4043] bg-white dark:bg-[#252629] shadow-xs">
+        <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2.5">
+          Add New Root Category
         </div>
+        <form onSubmit={handleCreateRoot} className="flex items-center gap-2.5 relative">
+          <div className="relative" ref={newColorRef}>
+            <button
+              type="button"
+              onClick={() => setIsNewColorPickerOpen(!isNewColorPickerOpen)}
+              title="Pick label color"
+              className="h-9 px-2.5 bg-gray-50 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2b2f] transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <span
+                className="w-3.5 h-3.5 rounded-full shadow-xs flex-shrink-0"
+                style={{ backgroundColor: getLabelDotColors(newRootColor).parent }}
+              />
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </button>
 
-        <input
-          type="text"
-          placeholder="Add a new root label..."
-          value={newRootName}
-          onChange={(e) => setNewRootName(e.target.value)}
-          className="flex-1 h-10 px-3.5 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-        />
+            {isNewColorPickerOpen && (
+              <div className="absolute top-full left-0 mt-2 p-3.5 w-60 bg-white dark:bg-[#28292c] rounded-xl shadow-xl border border-gray-200 dark:border-[#3c4043] z-50 animate-scale-in">
+                <span className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Select Category Color
+                </span>
+                <LabelColorPicker
+                  selectedColor={newRootColor}
+                  onSelectColor={(colorId) => {
+                    setNewRootColor(colorId);
+                    setIsNewColorPickerOpen(false);
+                  }}
+                  showPreview={true}
+                />
+              </div>
+            )}
+          </div>
 
-        <button
-          type="submit"
-          className="h-10 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Label</span>
-        </button>
-      </form>
+          <input
+            type="text"
+            placeholder="e.g. Work, Personal, Research, Travel..."
+            value={newRootName}
+            onChange={(e) => setNewRootName(e.target.value)}
+            className="flex-1 h-9 px-3 bg-gray-50/70 dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] rounded-lg text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+
+          <button
+            type="submit"
+            disabled={isCreatingRoot || !newRootName.trim()}
+            className="h-8.5 px-3.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white rounded-lg text-xs font-medium shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-50"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{isCreatingRoot ? 'Adding...' : 'Add Category'}</span>
+          </button>
+        </form>
+      </div>
 
       {/* Hierarchical Label Tree */}
       <div className="space-y-3">
         {tagTree.map((root) => {
           const rootDotColors = getLabelDotColors(root.color, root.name);
           const isColorPickerActive = activeColorPickerRootId === root.id;
+          const isEditingThisRoot = editingTagId === root.id;
 
           return (
             <div
               key={root.id}
-              className="bg-white dark:bg-[#28292c] rounded-[6px] border border-gray-200 dark:border-[#3c4043] p-4.5 shadow-xs space-y-3 transition-all"
+              className="bg-white dark:bg-[#252629] rounded-xl border border-gray-200/80 dark:border-[#3c4043] p-4 shadow-xs space-y-3 transition-all"
             >
-              {/* Root Label Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Color Dot Button */}
-                  <div className="relative" ref={isColorPickerActive ? inlineColorRef : undefined}>
+              {/* Root Label Row or Inline Edit Form */}
+              {isEditingThisRoot ? (
+                <form onSubmit={handleSaveEdit} className="p-3 bg-amber-50/40 dark:bg-amber-950/20 rounded-lg border border-amber-300 dark:border-amber-800/80 space-y-3 animate-fade-in text-xs">
+                  <div className="font-bold text-xs text-gray-900 dark:text-gray-100">
+                    Edit Category: {root.name}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full h-8.5 px-2.5 rounded-lg bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-xs focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Color
+                      </label>
+                      <LabelColorPicker
+                        selectedColor={editColor}
+                        onSelectColor={(c) => setEditColor(c)}
+                        showPreview={false}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-amber-200/60 dark:border-amber-900/60">
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      className="h-7 px-2.5 rounded-lg border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#252629] text-gray-700 dark:text-gray-300 text-xs font-medium cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSavingEdit}
+                      className="h-7 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium cursor-pointer"
+                    >
+                      {isSavingEdit ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {/* Color Dot Button */}
+                    <div className="relative" ref={isColorPickerActive ? inlineColorRef : undefined}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveColorPickerRootId(isColorPickerActive ? null : root.id)
+                        }
+                        title="Change color"
+                        className="w-6 h-6 rounded-full flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded-full shadow-xs flex-shrink-0"
+                          style={{ backgroundColor: rootDotColors.parent }}
+                        />
+                      </button>
+
+                      {isColorPickerActive && (
+                        <div className="absolute top-full left-0 mt-2 p-3.5 w-60 bg-white dark:bg-[#28292c] rounded-xl shadow-xl border border-gray-200 dark:border-[#3c4043] z-50 animate-scale-in">
+                          <span className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-2">
+                            Change Color for "{root.name}"
+                          </span>
+                          <LabelColorPicker
+                            selectedColor={root.color || 'blue'}
+                            onSelectColor={(colorId) => handleQuickChangeRootColor(root, colorId)}
+                            showPreview={true}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <span className="font-semibold text-xs text-gray-900 dark:text-gray-100">
+                      {root.name}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#1f2023] text-gray-500 dark:text-gray-400 font-medium">
+                      {root.note_count || 0} notes
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() =>
                         setActiveColorPickerRootId(isColorPickerActive ? null : root.id)
                       }
                       title="Change color"
-                      className="w-6 h-6 rounded-full flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                      className="w-7 h-7 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
                     >
-                      <span
-                        className="w-4 h-4 rounded-full shadow-xs flex-shrink-0"
-                        style={{ backgroundColor: rootDotColors.parent }}
-                      />
+                      <Palette className="w-3.5 h-3.5" />
                     </button>
 
-                    {isColorPickerActive && (
-                      <div className="absolute top-full left-0 mt-2 p-3.5 w-60 bg-white dark:bg-[#28292c] rounded-[6px] shadow-keep-modal border border-gray-200 dark:border-[#3c4043] z-50 animate-scale-in">
-                        <span className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-2">
-                          Change Color for "{root.name}"
-                        </span>
-                        <LabelColorPicker
-                          selectedColor={root.color || 'blue'}
-                          onSelectColor={(colorId) => handleQuickChangeRootColor(root, colorId)}
-                          showPreview={true}
-                        />
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddingSubForRootId(addingSubForRootId === root.id ? null : root.id);
+                        setNewSubName('');
+                      }}
+                      title="Add sub-label"
+                      className="h-7 px-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <FolderPlus className="w-3 h-3" />
+                      <span>Sub-label</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => startEditing(root)}
+                      title="Edit label"
+                      className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTag(root)}
+                      title="Delete label"
+                      className="w-7 h-7 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
-
-                  <span className="font-bold text-sm text-gray-900 dark:text-gray-100">
-                    {root.name}
-                  </span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-[6px] bg-gray-100 dark:bg-[#1a1b1e] text-gray-500 dark:text-gray-400 font-medium">
-                    {root.note_count || 0} notes
-                  </span>
                 </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActiveColorPickerRootId(isColorPickerActive ? null : root.id)
-                    }
-                    title="Change color"
-                    className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-amber-500 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
-                  >
-                    <Palette className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAddingSubForRootId(addingSubForRootId === root.id ? null : root.id);
-                      setNewSubName('');
-                    }}
-                    title="Add sub-label"
-                    className="h-8 px-2.5 rounded-[6px] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <FolderPlus className="w-3.5 h-3.5" />
-                    <span>Sub-label</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingTag(root);
-                      setEditName(root.name);
-                      setEditParentId(null);
-                      setEditColor(root.color || 'blue');
-                    }}
-                    title="Edit label"
-                    className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteTag(root)}
-                    title="Delete label"
-                    className="w-8 h-8 rounded-[6px] text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+              )}
 
               {/* Inline Add Sub-Label Form */}
               {addingSubForRootId === root.id && (
                 <div className="flex items-center gap-2 pl-6 pt-1 animate-fade-in">
-                  <CornerDownRight className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                  <CornerDownRight className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
                   <input
                     type="text"
                     autoFocus
@@ -319,69 +392,100 @@ export const LabelSettings: React.FC = () => {
                       if (e.key === 'Enter') handleCreateSub(root.id);
                       if (e.key === 'Escape') setAddingSubForRootId(null);
                     }}
-                    className="flex-1 h-9 px-3 bg-gray-50 dark:bg-[#1a1b1e] border border-blue-400 dark:border-blue-500 rounded-[6px] text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none"
+                    className="flex-1 h-8 px-2.5 bg-gray-50/70 dark:bg-[#1f2023] border border-blue-400 dark:border-blue-500 rounded-lg text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => handleCreateSub(root.id)}
-                    className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                    className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium shadow-xs transition-all cursor-pointer"
                   >
                     Save
                   </button>
                   <button
                     type="button"
                     onClick={() => setAddingSubForRootId(null)}
-                    className="w-9 h-9 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-[6px] hover:bg-gray-100 dark:hover:bg-[#3c4043] flex items-center justify-center cursor-pointer"
+                    className="w-8 h-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-[#3c4043] flex items-center justify-center cursor-pointer"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
 
               {/* Sub-Labels List (Level 2) */}
               {root.children && root.children.length > 0 && (
-                <div className="pl-6 space-y-1.5 border-l-2 border-gray-100 dark:border-[#3c4043] ml-2">
-                  {root.children.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="flex items-center justify-between p-2.5 rounded-[6px] bg-gray-50/80 dark:bg-[#202124] hover:bg-gray-100 dark:hover:bg-[#2c2d30] text-xs transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: rootDotColors.child }}
-                        />
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">
-                          {sub.name}
-                        </span>
-                        <span className="text-[11px] text-gray-400">
-                          ({sub.note_count || 0} notes)
-                        </span>
-                      </div>
+                <div className="pl-6 space-y-1.5 border-l border-gray-100 dark:border-[#3c4043] ml-2">
+                  {root.children.map((sub) => {
+                    const isEditingThisSub = editingTagId === sub.id;
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingTag(sub);
-                            setEditName(sub.name);
-                            setEditParentId(sub.parent_id || null);
-                            setEditColor(sub.color || 'blue');
-                          }}
-                          className="w-7 h-7 rounded-[6px] text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
+                    if (isEditingThisSub) {
+                      return (
+                        <form
+                          key={sub.id}
+                          onSubmit={handleSaveEdit}
+                          className="flex items-center gap-2 p-2 bg-blue-50/50 dark:bg-blue-950/30 rounded-lg border border-blue-300 dark:border-blue-800 animate-fade-in"
                         >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteTag(sub)}
-                          className="w-7 h-7 rounded-[6px] text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center cursor-pointer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                          <input
+                            type="text"
+                            required
+                            autoFocus
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="flex-1 h-7.5 px-2.5 rounded-md bg-white dark:bg-[#1f2023] border border-gray-200 dark:border-[#3c4043] text-xs"
+                          />
+                          <button
+                            type="submit"
+                            className="h-7.5 px-2.5 bg-blue-600 text-white rounded-md text-xs font-medium cursor-pointer"
+                          >
+                            <Check className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditing}
+                            className="h-7.5 px-2 text-gray-400 hover:text-gray-600 rounded-md cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </form>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={sub.id}
+                        className="flex items-center justify-between p-2 rounded-lg bg-gray-50/60 dark:bg-[#1f2023] hover:bg-gray-100/70 dark:hover:bg-[#2c2d30] text-xs transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: rootDotColors.child }}
+                          />
+                          <span className="font-medium text-gray-800 dark:text-gray-200 text-xs">
+                            {sub.name}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            ({sub.note_count || 0})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => startEditing(sub)}
+                            className="w-6 h-6 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3c4043] transition-colors flex items-center justify-center cursor-pointer"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTag(sub)}
+                            className="w-6 h-6 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center justify-center cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -389,100 +493,12 @@ export const LabelSettings: React.FC = () => {
         })}
 
         {tagTree.length === 0 && (
-          <div className="p-10 text-center border-2 border-dashed border-gray-200 dark:border-[#3c4043] rounded-[6px]">
+          <div className="p-10 text-center border-2 border-dashed border-gray-200 dark:border-[#3c4043] rounded-xl">
             <TagIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-xs text-gray-400 font-medium">No labels created yet. Add your first label above.</p>
+            <p className="text-xs text-gray-400 font-medium">No labels created yet. Add your first category above.</p>
           </div>
         )}
       </div>
-
-      {/* Edit Tag Modal */}
-      {editingTag && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div
-            className="w-full max-w-sm bg-white dark:bg-[#28292c] rounded-[6px] shadow-keep-modal border border-gray-200 dark:border-[#3c4043] overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4.5 border-b border-gray-100 dark:border-[#3c4043] flex items-center justify-between">
-              <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Edit2 className="w-4 h-4 text-amber-500" />
-                Edit Label
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditingTag(null)}
-                className="p-1.5 rounded-[6px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateTag} className="p-5 space-y-4 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Label Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full h-10 px-3.5 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-900 dark:text-gray-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Parent Category
-                </label>
-                <select
-                  value={editParentId || ''}
-                  onChange={(e) => setEditParentId(e.target.value ? e.target.value : null)}
-                  className="w-full h-10 px-3.5 bg-gray-50 dark:bg-[#1a1b1e] border border-gray-200 dark:border-[#3c4043] rounded-[6px] text-xs text-gray-900 dark:text-gray-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer"
-                >
-                  <option value="">None (Top-Level Root Label)</option>
-                  {tagTree
-                    .filter((r) => r.id !== editingTag.id)
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {!editParentId && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Label Color
-                  </label>
-                  <LabelColorPicker
-                    selectedColor={editColor}
-                    onSelectColor={(c) => setEditColor(c)}
-                    showPreview={true}
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-[#3c4043]">
-                <button
-                  type="button"
-                  onClick={() => setEditingTag(null)}
-                  className="h-9 px-4 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#3c4043] rounded-[6px] text-xs font-semibold transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="h-9 px-4 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white rounded-[6px] text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

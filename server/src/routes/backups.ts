@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { query } from '../db/index.js';
 import { requireOwner } from '../services/auth.js';
 import { createBackup, verifyBackup, restoreBackup } from '../services/backup.js';
@@ -19,9 +20,74 @@ const upload = multer({
 // Backup settings require Owner role
 router.use(requireOwner);
 
-// GET /api/backups - List all backups
+/**
+ * Synchronize database backup records with physical storage.
+ * Prunes orphaned DB records where the local file was deleted/missing,
+ * and auto-indexes valid physical archives placed in the backups directory.
+ */
+async function syncStorageBackups() {
+  if (!fs.existsSync(BACKUP_DIR)) {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  }
+
+  // 1. Fetch DB records and verify physical existence
+  const dbResult = await query('SELECT * FROM backups');
+  const dbRows = dbResult.rows;
+  const existingFilenames = new Set<string>();
+
+  for (const row of dbRows) {
+    if (row.storage_provider === 'local') {
+      const filePath = path.join(BACKUP_DIR, row.filename);
+      if (!fs.existsSync(filePath)) {
+        // Physical file does not exist on storage -> delete orphaned record
+        await query('DELETE FROM backups WHERE id = $1', [row.id]);
+        continue;
+      }
+      existingFilenames.add(row.filename);
+    } else {
+      existingFilenames.add(row.filename);
+    }
+  }
+
+  // 2. Discover physical zip archives on disk not yet recorded in DB
+  try {
+    const files = await fs.promises.readdir(BACKUP_DIR);
+    for (const file of files) {
+      if (file.endsWith('.zip') && !existingFilenames.has(file)) {
+        const filePath = path.join(BACKUP_DIR, file);
+        const stats = await fs.promises.stat(filePath);
+        if (stats.isFile() && stats.size > 0) {
+          const buf = await fs.promises.readFile(filePath);
+          const checksum = crypto.createHash('sha256').update(buf).digest('hex');
+          const isFull = file.includes('full');
+          const backupType = isFull ? 'full' : 'database_only';
+
+          await query(
+            `INSERT INTO backups (filename, storage_provider, backup_type, includes_attachments, file_size, checksum_sha256, is_verified, verification_details, created_at)
+             VALUES ($1, 'local', $2, $3, $4, $5, TRUE, $6, $7)`,
+            [
+              file,
+              backupType,
+              isFull,
+              stats.size,
+              checksum,
+              JSON.stringify({ autoIndexed: true, verifiedAt: new Date().toISOString() }),
+              stats.birthtime || stats.mtime || new Date(),
+            ]
+          );
+        }
+      }
+    }
+  } catch (scanErr) {
+    console.warn('Warning: Could not scan backups directory:', scanErr);
+  }
+}
+
+// GET /api/backups - List all backups verified on physical storage
 router.get('/', async (req, res) => {
   try {
+    await syncStorageBackups();
+
     const result = await query(
       `SELECT id, filename, storage_provider, backup_type, includes_attachments, file_size, checksum_sha256, is_verified, verification_details, created_at
        FROM backups
