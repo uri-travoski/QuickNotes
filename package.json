@@ -8,7 +8,10 @@
     "build": "npm --prefix server run build && npm --prefix client run build",
     "start": "npm --prefix server run start",
     "db:migrate": "npm --prefix server run db:migrate",
-    "db:seed": "npm --prefix server run db:seed"
+    "db:seed": "npm --prefix server run db:seed",
+    "docker:build": "docker build -t ghcr.io/uri-travoski/quicknotes:latest -t ghcr.io/uri-travoski/quicknotes:1.1.5 .",
+    "docker:push": "docker push ghcr.io/uri-travoski/quicknotes:latest && docker push ghcr.io/uri-travoski/quicknotes:1.1.5",
+    "docker:release": "npm run docker:build && npm run docker:push"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
